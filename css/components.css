@@ -199,7 +199,7 @@
 .campo-checks label:hover { border-color: var(--primario); }
 .campo-checks input { accent-color: var(--primario); margin: 0; }
 
-.lista { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.lista { list-style: none; display: flex; flex-direction: column; gap: 12px; }
 .lista li {
   display: flex;
   align-items: center;
@@ -207,12 +207,23 @@
   background: var(--tarjeta);
   border: 1px solid var(--borde);
   border-radius: var(--radio-p);
-  padding: 14px 16px;
+  padding: 15px 18px;
   animation: subir 0.3s ease both;
 }
-.lista li .detalle { flex: 1; min-width: 0; }
-.lista li .detalle .nomb { font-weight: 600; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lista li .detalle .perm { font-size: 0.76rem; color: var(--texto-suave); }
+.lista li .detalle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.lista li .detalle .nomb { font-weight: 600; font-size: 0.94rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lista li .detalle .strong, .lista li .detalle strong { font-weight: 600; font-size: 0.94rem; }
+.lista li .detalle .token { margin-top: 1px; }
+.lista li .detalle .perm { font-size: 0.78rem; color: var(--texto-suave); }
+.lista li .detalle .fila-nom { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lista li .detalle .perms { display: flex; flex-wrap: wrap; gap: 8px; }
 .lista li .acciones { display: flex; gap: 8px; align-items: center; flex: none; }
 
 .token {
@@ -258,3 +269,12 @@
 }
 .tarjeta-inv .qr { max-width: 170px; margin: 12px auto 0; display: block; border-radius: 12px; border: 1px solid var(--borde); }
 .tarjeta-inv .acciones { display: flex; gap: 10px; margin-top: 12px; justify-content: center; }
+
+.panel-admin { padding: 28px; }
+.panel-admin > h2 { margin: 30px 0 14px; }
+.panel-admin > h2:first-child { margin: 0 0 20px; }
+.panel-admin .fila-campos-2 { margin-top: 14px; grid-template-columns: 1fr 1fr; gap: 14px; }
+.panel-admin .campo-checks { margin-top: 14px; }
+.panel-admin .campo-checks > span { margin-bottom: 10px; }
+.panel-admin .btn-crear { margin-top: 16px; align-self: flex-start; }
+.panel-admin .lista { margin-top: 14px; }
