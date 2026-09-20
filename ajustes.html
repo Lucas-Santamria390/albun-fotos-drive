@@ -15,6 +15,11 @@
 </head>
 <body>
 
+  <div id="cargando" class="capa" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
+    <p>Cargando ajustes…</p>
+  </div>
+
   <div id="capaAuth" class="capa centrar oculto">
     <section class="tarjeta login">
       <h2>Para entrar a los ajustes</h2>
@@ -76,14 +81,16 @@
 
         <h2>Invitaciones</h2>
         <div class="fila-campos-2">
-          <label class="campo">Rol
+          <label class="campo">
+            <span>Rol de invitación</span>
             <select id="selRol">
               <option value="colaborador">Colaborador</option>
               <option value="visitante">Visitante</option>
             </select>
           </label>
-          <label class="campo">Expiración
-            <input type="text" id="inpExp" placeholder="indefinida o AAAA-MM-DD">
+          <label class="campo">
+            <span>Expiración (opcional)</span>
+            <input type="date" id="inpExp">
           </label>
         </div>
         <div class="campo campo-checks">

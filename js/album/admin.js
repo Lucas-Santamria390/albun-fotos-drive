@@ -16,8 +16,11 @@ export function renderStats() {
 export async function iniciarOwner() {
   await asegurarEstructura();
   state.fId = CONFIG.memo.fotos;
-  await compartirAlbum();
-  state.usuarios = await cargarJson(CONFIG.memo.users);
+  await Promise.all([
+    compartirAlbum(),
+    cargarJson(CONFIG.memo.users).then(function (u) { state.usuarios = u; }),
+    cargarJson(CONFIG.memo.inv).then(function (i) { state.invitaciones = i; })
+  ]);
   if (!state.usuarios[state.yo] || state.usuarios[state.yo].rol !== "admin") {
     state.usuarios[state.yo] = {
       nombre: state.yoNombre,
@@ -28,7 +31,6 @@ export async function iniciarOwner() {
   }
   state.rol = "admin";
   state.permisos = state.usuarios[state.yo].permisos || { subir: true, borrar: true, modificar: true };
-  state.invitaciones = await cargarJson(CONFIG.memo.inv);
 }
 
 export function renderUsuarios() {
@@ -48,9 +50,6 @@ export function renderUsuarios() {
     det.className = "detalle";
     const nombre = document.createElement("strong");
     nombre.textContent = u.nombre || k;
-    const email = document.createElement("span");
-    email.className = "token";
-    email.textContent = k;
     const rol = document.createElement("span");
     rol.className = "etiqueta " + (u.rol || "colaborador");
     rol.textContent = u.rol || "colaborador";
@@ -58,20 +57,23 @@ export function renderUsuarios() {
     nomFila.className = "fila-nom";
     nomFila.appendChild(nombre);
     nomFila.appendChild(rol);
-    const per1 = document.createElement("span");
-    per1.className = "perm";
-    per1.textContent = "subir:" + (per.subir ? "sí" : "no");
-    const per2 = document.createElement("span");
-    per2.className = "perm";
-    per2.textContent = "borrar:" + (per.borrar ? "sí" : "no");
-    const per3 = document.createElement("span");
-    per3.className = "perm";
-    per3.textContent = "modificar:" + (per.modificar ? "sí" : "no");
+    const email = document.createElement("span");
+    email.className = "email";
+    email.textContent = k;
+    const p1 = document.createElement("span");
+    p1.className = "perm " + (per.subir ? "on" : "off");
+    p1.textContent = (per.subir ? "✓" : "✕") + " Subir";
+    const p2 = document.createElement("span");
+    p2.className = "perm " + (per.borrar ? "on" : "off");
+    p2.textContent = (per.borrar ? "✓" : "✕") + " Borrar";
+    const p3 = document.createElement("span");
+    p3.className = "perm " + (per.modificar ? "on" : "off");
+    p3.textContent = (per.modificar ? "✓" : "✕") + " Modificar";
     const perms = document.createElement("div");
     perms.className = "perms";
-    perms.appendChild(per1);
-    perms.appendChild(per2);
-    perms.appendChild(per3);
+    perms.appendChild(p1);
+    perms.appendChild(p2);
+    perms.appendChild(p3);
     det.appendChild(nomFila);
     det.appendChild(email);
     det.appendChild(perms);
@@ -105,8 +107,8 @@ export function renderInvitaciones() {
     codFila.appendChild(cod);
     codFila.appendChild(rol);
     const exp = document.createElement("span");
-    exp.className = "perm";
-    exp.textContent = "expira: " + (inv.expiracion || "indefinida");
+    exp.className = "linea";
+    exp.textContent = "Expira: " + (inv.expiracion || "indefinida");
     det.appendChild(codFila);
     det.appendChild(exp);
     const acc = document.createElement("div");
@@ -134,9 +136,17 @@ export function renderAdmin() {
 
 export function cambiarRol(e) {
   const visit = e.target.value === "visitante";
-  $("#chkSubir").checked = !visit;
-  $("#chkBorrar").checked = false;
-  $("#chkModificar").checked = false;
+  const opts = [$("#chkSubir"), $("#chkBorrar"), $("#chkModificar")];
+  opts.forEach(function (c) { if (c) c.disabled = visit; });
+  if (visit) {
+    $("#chkSubir").checked = false;
+    $("#chkBorrar").checked = false;
+    $("#chkModificar").checked = false;
+  } else {
+    $("#chkSubir").checked = true;
+    $("#chkBorrar").checked = false;
+    $("#chkModificar").checked = false;
+  }
 }
 
 function construirEnlace(token) {

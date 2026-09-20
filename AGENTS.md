@@ -27,10 +27,12 @@ js/
  │   ├── api.js      # DriveApi: capa REST de Drive (get/post/list/leer/borrar/subir/…compartir)
  │   └── structure.js# asegurarEstructura() (crea MiAlbumWeb_Config y JSONs) + compartirAlbum()
  ├── album/
- │   ├── state.js    # estado de sesión (rol/permisos/fotos/caché/filtros) + cargarJson/visibles
+ │   ├── state.js    # estado de sesión (rol/permisos/fotos/caché/filtros) + cargarJson/cargarFotos/visibles
+ │   ├── sesion.js   # helpers de sesión compartidos: salir, prepararSesion, renderSesion, mostrarGateError
  │   ├── gallery.js  # render de galería (tarjetas, imágenes, búsqueda/orden, contador)
  │   ├── lightbox.js # visor con teclado y descarga
  │   ├── upload.js   # subida con progreso (dropzone + input)
+ │   ├── borrar.js   # borrado de fotos con confirmación (solicitar/ejecutar/teclado)
  │   ├── admin.js    # panel admin: iniciarOwner, stats, usuarios, invitaciones, QR, revocar
  │   ├── ajustes.js  # punto de entrada de ajustes.html (solo dueño)
  │   └── controller.js # punto de entrada del álbum: login, flujos owner/invitado, delegación de eventos

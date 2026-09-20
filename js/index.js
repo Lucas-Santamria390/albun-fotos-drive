@@ -1,6 +1,6 @@
 import { applyTema, initTema } from "./theme.js";
 import { AUTH } from "./auth.js";
-import { toast } from "./util.js";
+import { toast, mostrarCarga, ocultarCarga } from "./util.js";
 
 function entrarAlAlbum() {
   location.href = "album.html" + location.search;
@@ -8,8 +8,9 @@ function entrarAlAlbum() {
 
 function conectar(btn) {
   btn.disabled = true;
-  toast("Conectando con Google…", "se");
+  mostrarCarga();
   AUTH.login().then(entrarAlAlbum).catch(function (e) {
+    ocultarCarga();
     toast(e.message, "error");
     btn.disabled = false;
   });
@@ -23,6 +24,7 @@ function init() {
     entrarAlAlbum();
     return;
   }
+  ocultarCarga();
   const btnReg = document.getElementById("btnRegistrarse");
   const btnLogin = document.getElementById("btnLoginNav");
   if (btnReg) btnReg.addEventListener("click", function () { conectar(btnReg); });

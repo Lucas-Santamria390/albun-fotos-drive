@@ -34,6 +34,13 @@ export async function cargarJson(id) {
   }
 }
 
+export async function cargarFotos() {
+  const fotos = await DriveApi.listarFotos(state.fId);
+  state.fotos = fotos.map(function (f) {
+    return { id: f.id, name: f.name, size: f.size, createdTime: f.createdTime };
+  });
+}
+
 export function visibles() {
   const q = state.txBusqueda.toLowerCase();
   let arr = state.fotos.filter(function (f) {

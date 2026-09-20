@@ -1,6 +1,16 @@
 export const $ = function (s) { return document.querySelector(s); };
 export const $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
 
+export function mostrarCarga() {
+  const o = $("#cargando");
+  if (o) o.classList.remove("oculto");
+}
+
+export function ocultarCarga() {
+  const o = $("#cargando");
+  if (o) o.classList.add("oculto");
+}
+
 export function toast(msj, tipo) {
   const c = $("#toasts");
   if (!c) return;
