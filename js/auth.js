@@ -6,7 +6,7 @@ export const AUTH = {
   user: null,
 
   init() {
-    this.token = sessionStorage.getItem("MiAlbumWeb_token") || null;
+    this.token = localStorage.getItem("MiAlbumWeb_token") || null;
   },
 
   cargarScript() {
@@ -32,7 +32,7 @@ export const AUTH = {
           callback: function (r) {
             if (r.access_token) {
               self.token = r.access_token;
-              sessionStorage.setItem("MiAlbumWeb_token", r.access_token);
+              localStorage.setItem("MiAlbumWeb_token", r.access_token);
               if (self._cb) { const c = self._cb; self._cb = null; c(); }
             } else if (self._err) {
               const e = self._err; self._err = null;
@@ -66,6 +66,6 @@ export const AUTH = {
   salir() {
     this.token = null;
     this.user = null;
-    sessionStorage.removeItem("MiAlbumWeb_token");
+    localStorage.removeItem("MiAlbumWeb_token");
   }
 };

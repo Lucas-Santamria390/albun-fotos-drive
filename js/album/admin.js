@@ -1,12 +1,34 @@
 import { $, toast, ICONOS } from "../util.js";
 import { CONFIG } from "../config.js";
-import { state } from "./state.js";
+import { state, cargarJson } from "./state.js";
 import { DriveApi } from "../drive/api.js";
+import { asegurarEstructura, compartirAlbum } from "../drive/structure.js";
 
 export function renderStats() {
-  $("#statUsuarios").textContent = Object.keys(state.usuarios || {}).length;
-  $("#statInv").textContent = Object.keys(state.invitaciones || {}).length;
-  $("#statFotos").textContent = state.fotos ? state.fotos.length : 0;
+  const u = $("#statUsuarios");
+  const i = $("#statInv");
+  const f = $("#statFotos");
+  if (u) u.textContent = Object.keys(state.usuarios || {}).length;
+  if (i) i.textContent = Object.keys(state.invitaciones || {}).length;
+  if (f) f.textContent = state.fotos ? state.fotos.length : 0;
+}
+
+export async function iniciarOwner() {
+  await asegurarEstructura();
+  state.fId = CONFIG.memo.fotos;
+  await compartirAlbum();
+  state.usuarios = await cargarJson(CONFIG.memo.users);
+  if (!state.usuarios[state.yo] || state.usuarios[state.yo].rol !== "admin") {
+    state.usuarios[state.yo] = {
+      nombre: state.yoNombre,
+      rol: "admin",
+      permisos: { subir: true, borrar: true, modificar: true }
+    };
+    await DriveApi.actualizarJson(CONFIG.memo.users, state.usuarios);
+  }
+  state.rol = "admin";
+  state.permisos = state.usuarios[state.yo].permisos || { subir: true, borrar: true, modificar: true };
+  state.invitaciones = await cargarJson(CONFIG.memo.inv);
 }
 
 export function renderUsuarios() {
@@ -93,7 +115,9 @@ export function renderInvitaciones() {
 }
 
 export function renderAdmin() {
-  $("#panelAdmin").classList.remove("oculto");
+  const panel = $("#panelAdmin");
+  if (!panel) return;
+  panel.classList.remove("oculto");
   renderUsuarios();
   renderInvitaciones();
   renderStats();

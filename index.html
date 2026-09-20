@@ -27,7 +27,11 @@
         <h1>MiAlbumWeb</h1>
       </div>
       <div class="sesion">
-        <button id="btnLoginNav" class="btn btn-prim btn-login">
+        <button id="btnRegistrarse" class="btn btn-prim">
+          <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Registrarse
+        </button>
+        <button id="btnLoginNav" class="btn btn-sec">
           <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Iniciar sesión
         </button>
@@ -67,19 +71,11 @@
         <p>Invita por enlace o código QR y decide quién puede subir fotos.</p>
       </div>
     </section>
-
-    <section class="tarjeta login">
-      <h2>Entra con tu cuenta de Google</h2>
-      <p>En unos segundos tendrás tu álbum listo. Sin instalaciones ni complicaciones.</p>
-      <button id="btnLogin" class="btn btn-prim btn-login">
-        <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15.5 8.5a4 4 0 1 0 0 7" stroke-linecap="round"/></svg>
-        Iniciar sesión con Google
-      </button>
-      <p id="msj" class="mar-gen"></p>
-    </section>
   </main>
 
   <footer class="pie">MiAlbumWeb · Tu álbum, tus recuerdos</footer>
+
+  <div id="toasts" aria-live="polite"></div>
 
   <script type="module" src="js/index.js"></script>
 </body>

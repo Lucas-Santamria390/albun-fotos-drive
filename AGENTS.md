@@ -8,7 +8,7 @@ ClientId OAuth: `622196535234-ddrlisjppqaivef385ncm17jvi22pojk.apps.googleuserco
 ## Estructura de archivos
 
 ```
-index.html · album.html · privacidad.html   # páginas; cada una carga 1 solo <script type="module">
+index.html · album.html · ajustes.html · privacidad.html   # páginas; cada una carga 1 solo <script type="module">
 css/                                       # dividido por responsabilidad
  ├── base.css        # reset, variables (claro/oscuro), animaciones, utilidades
  ├── layout.css      # cabezo, contenedores, hero, tarjetas, pie
@@ -31,7 +31,8 @@ js/
  │   ├── gallery.js  # render de galería (tarjetas, imágenes, búsqueda/orden, contador)
  │   ├── lightbox.js # visor con teclado y descarga
  │   ├── upload.js   # subida con progreso (dropzone + input)
- │   ├── admin.js    # panel: stats, usuarios, invitaciones, QR, revocar
+ │   ├── admin.js    # panel admin: iniciarOwner, stats, usuarios, invitaciones, QR, revocar
+ │   ├── ajustes.js  # punto de entrada de ajustes.html (solo dueño)
  │   └── controller.js # punto de entrada del álbum: login, flujos owner/invitado, delegación de eventos
  ├── index.js        # punto de entrada de la portada
 ```
@@ -94,8 +95,8 @@ Toda foto siempre se guarda en `fotos/`. Los permisos se validan contra `usuario
 
 ## Flujos clave (implementar tal cual)
 
-1. **Login del dueño:** botón "Iniciar sesión con Google" → OAuth 2.0 (`drive.file`) → verificar/crear `MiAlbumWeb_Config/` + JSONs.
-2. **Invitaciones:** el admin elige rol/permisos → la app genera token único, lo guarda en `invitaciones.json` y crea la URL:
+1. **Login del dueño:** botón "Registrarse"/"Iniciar sesión" en la portada → OAuth 2.0 (`drive.file`) → verificar/crear `MiAlbumWeb_Config/` + JSONs.
+2. **Invitaciones (página `ajustes.html`, solo dueño):** el admin elige rol/permisos → la app genera token único, lo guarda en `invitaciones.json` y crea la URL:
    `https://tu-album.netlify.app/album.html?drive=ID_DRIVE_DUENO&token=TOKEN_SECRETO`
    - Generar QR en pantalla para compartir por móvil.
    - Al entrar: validar token contra `invitaciones.json`, pedir nombre al invitado, registrarlo en `usuarios.json`.

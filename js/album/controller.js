@@ -2,12 +2,11 @@ import { $, toast } from "../util.js";
 import { applyTema, initTema } from "../theme.js";
 import { AUTH } from "../auth.js";
 import { DriveApi } from "../drive/api.js";
-import { asegurarEstructura, compartirAlbum } from "../drive/structure.js";
 import { state, cargarJson, puedeSubir } from "./state.js";
 import { renderGaleria } from "./gallery.js";
 import { abrirLightbox, cerrarLightbox, navegarFoto, initLightbox } from "./lightbox.js";
 import { initUpload, subirFotos } from "./upload.js";
-import { renderAdmin, renderStats, crearInvitacion, copiarEnlace, clickInvitaciones, cambiarRol } from "./admin.js";
+import { iniciarOwner } from "./admin.js";
 
 let borrarPendiente = null;
 
@@ -33,7 +32,6 @@ async function continuar() {
     $("#capaContenido").classList.remove("oculto");
     if (state.modo === "owner") {
       await iniciarOwner();
-      renderAdmin();
     } else {
       await entrarInvitado();
     }
@@ -46,24 +44,6 @@ async function continuar() {
     $("#msjCapa").textContent = e.message || "No se pudo conectar";
     AUTH.salir();
   }
-}
-
-async function iniciarOwner() {
-  await asegurarEstructura();
-  state.fId = CONFIG.memo.fotos;
-  await compartirAlbum();
-  state.usuarios = await cargarJson(CONFIG.memo.users);
-  if (!state.usuarios[state.yo] || state.usuarios[state.yo].rol !== "admin") {
-    state.usuarios[state.yo] = {
-      nombre: state.yoNombre,
-      rol: "admin",
-      permisos: { subir: true, borrar: true, modificar: true }
-    };
-    await DriveApi.actualizarJson(CONFIG.memo.users, state.usuarios);
-  }
-  state.rol = "admin";
-  state.permisos = state.usuarios[state.yo].permisos || { subir: true, borrar: true, modificar: true };
-  state.invitaciones = await cargarJson(CONFIG.memo.inv);
 }
 
 async function entrarInvitado() {
@@ -125,11 +105,10 @@ async function cargarGaleria() {
     return { id: f.id, name: f.name, size: f.size, createdTime: f.createdTime };
   });
   renderGaleria();
-  renderStats();
 }
 
 function renderBotones() {
-  $("#panelAdmin").classList.toggle("oculto", state.modo !== "owner");
+  $("#btnAjustes").classList.toggle("oculto", state.modo !== "owner");
   $("#secSubir").classList.toggle("oculto", !puedeSubir());
 }
 
@@ -192,7 +171,6 @@ async function ejecutarBorrar() {
     if (state.cache[id]) { URL.revokeObjectURL(state.cache[id]); delete state.cache[id]; }
     state.fotos = state.fotos.filter(function (x) { return x.id !== id; });
     renderGaleria();
-    renderStats();
     toast("Foto eliminada.", "ok");
   } catch (err) {
     toast(err.message, "error");
@@ -216,7 +194,6 @@ function teclas(e) {
 
 function clickPagina(e) {
   if (e.target.closest(".foto")) clickGaleria(e);
-  if (e.target.closest(".borrar-inv")) clickInvitaciones(e);
 }
 
 function initConfirm() {
@@ -234,10 +211,7 @@ function init() {
   $("#btnSalir").addEventListener("click", salir);
   $("#btnLoginGoogle").addEventListener("click", comenzarLogin);
   $("#inputSubir").addEventListener("change", function (e) { subirFotos(e.target.files); });
-  $("#btnCrearInvitacion").addEventListener("click", crearInvitacion);
-  $("#btnCopiar").addEventListener("click", copiarEnlace);
   $("#formNombre").addEventListener("submit", enviarNombre);
-  $("#selRol").addEventListener("change", cambiarRol);
   $("#btnRefrescar").addEventListener("click", cargarGaleria);
   $("#inpBuscar").addEventListener("input", function (e) {
     state.txBusqueda = e.target.value.trim();

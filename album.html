@@ -49,6 +49,9 @@
             <span class="avatar" id="avatar">?</span>
             <span id="txtSesion"></span>
           </div>
+          <a id="btnAjustes" class="btn btn-ghost" title="Ajustes" aria-label="Ajustes" href="ajustes.html">
+            <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
           <button id="btnSalir" class="btn btn-sec">
             <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Salir
@@ -72,57 +75,6 @@
         </div>
         <input type="file" id="inputSubir" accept="image/*" multiple hidden>
         <div id="progresoCola" class="progreso-col"></div>
-      </section>
-
-      <section id="panelAdmin" class="tarjeta oculto" aria-label="Administración">
-        <h2>
-          <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 4.6v5.2c0 5.2-3.8 8.6-9 10.2-5.2-1.6-9-5-9-10.2V6.6z" stroke-linejoin="round"/><path d="M9 12l2 2 4-4"/></svg>
-          Administración
-        </h2>
-        <div class="estadisticas">
-          <div class="stat"><b id="statUsuarios">0</b><span>usuarios</span></div>
-          <div class="stat"><b id="statInv">0</b><span>invitaciones</span></div>
-          <div class="stat"><b id="statFotos">0</b><span>fotos</span></div>
-        </div>
-
-        <h2>Usuarios</h2>
-        <ul id="listaUsuarios" class="lista"></ul>
-
-        <h2 class="mar-gen">Invitaciones</h2>
-        <div class="fila">
-          <label class="campo">Rol
-            <select id="selRol">
-              <option value="colaborador">Colaborador</option>
-              <option value="visitante">Visitante</option>
-            </select>
-          </label>
-          <div class="campo campo-checks">
-            <span>Permisos</span>
-            <label><input type="checkbox" id="chkSubir" checked> Subir</label>
-            <label><input type="checkbox" id="chkBorrar"> Borrar</label>
-            <label><input type="checkbox" id="chkModificar"> Modificar</label>
-          </div>
-          <label class="campo">Expiración
-            <input type="text" id="inpExp" placeholder="indefinida o AAAA-MM-DD">
-          </label>
-          <button id="btnCrearInvitacion" class="btn btn-prim">
-            <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V8zM12 11v6M9 14h6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Generar invitación
-          </button>
-        </div>
-
-        <div id="salidaInvitacion" class="tarjeta-inv oculto">
-          <input id="enlaceInv" readonly>
-          <div class="fila">
-            <button id="btnCopiar" class="btn btn-prim">
-              <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke-linecap="round"/></svg>
-              Copiar enlace
-            </button>
-            <img id="qrInv" class="qr" alt="Código QR de invitación">
-          </div>
-        </div>
-
-        <ul id="listaInvitaciones" class="lista"></ul>
       </section>
 
       <section class="galeria-wrap" aria-label="Galería">

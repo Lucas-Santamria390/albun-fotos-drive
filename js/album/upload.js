@@ -3,7 +3,6 @@ import { CONFIG } from "../config.js";
 import { state } from "./state.js";
 import { DriveApi } from "../drive/api.js";
 import { renderGaleria } from "./gallery.js";
-import { renderStats } from "./admin.js";
 
 function itemProgreso(nombre) {
   const cola = $("#progresoCola");
@@ -67,7 +66,6 @@ export async function subirFotos(files) {
       toast("No se pudo subir \u201c" + archivo.name + "\u201d: " + err.message, "error");
     }
     renderGaleria();
-    renderStats();
   }
   $("#inputSubir").value = "";
 }

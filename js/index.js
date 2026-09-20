@@ -1,28 +1,32 @@
 import { applyTema, initTema } from "./theme.js";
 import { AUTH } from "./auth.js";
+import { toast } from "./util.js";
+
+function entrarAlAlbum() {
+  location.href = "album.html" + location.search;
+}
+
+function conectar(btn) {
+  btn.disabled = true;
+  toast("Conectando con Google…", "se");
+  AUTH.login().then(entrarAlAlbum).catch(function (e) {
+    toast(e.message, "error");
+    btn.disabled = false;
+  });
+}
 
 function init() {
   AUTH.init();
   applyTema();
   initTema();
   if (AUTH.token) {
-    location.href = "album.html" + location.search;
+    entrarAlAlbum();
     return;
   }
-  const btns = Array.prototype.slice.call(document.querySelectorAll(".btn-login"));
-  const msj = document.getElementById("msj");
-  btns.forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      if (msj) msj.textContent = "Conectando con Google…";
-      btn.disabled = true;
-      AUTH.login().then(function () {
-        location.href = "album.html" + location.search;
-      }).catch(function (e) {
-        if (msj) msj.textContent = e.message;
-        btn.disabled = false;
-      });
-    });
-  });
+  const btnReg = document.getElementById("btnRegistrarse");
+  const btnLogin = document.getElementById("btnLoginNav");
+  if (btnReg) btnReg.addEventListener("click", function () { conectar(btnReg); });
+  if (btnLogin) btnLogin.addEventListener("click", function () { conectar(btnLogin); });
 }
 
 init();
