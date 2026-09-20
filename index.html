@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MiAlbumWeb — Álbum colaborativo</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="cabeza">
+    <h1>MiAlbumWeb</h1>
+    <p class="sub">Álbum colaborativo, descentralizado y 100% gratuito.</p>
+  </header>
+
+  <main class="centro">
+    <section class="tarjeta login">
+      <h2>Entra con tu cuenta de Google</h2>
+      <p>Tu álbum y tus fotos viven en tu propio Google Drive. Al iniciar sesión se crea automáticamente la estructura necesaria.</p>
+      <button id="btnLogin" class="btn btn-prim">Iniciar sesión con Google</button>
+      <p id="msj" class="msj"></p>
+    </section>
+  </main>
+
+  <footer class="pie">Hecho con HTML5 + CSS3 + JavaScript vainilla. Sin servidores y sin costes.</footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/drive.js"></script>
+  <script src="js/index.js"></script>
+</body>
+</html>

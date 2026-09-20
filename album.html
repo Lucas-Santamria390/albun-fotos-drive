@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MiAlbumWeb — Álbum</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div id="capaAuth" class="capa centrar oculto">
+    <section class="tarjeta login">
+      <h2>Para entrar al álbum</h2>
+      <p>Necesitas iniciar sesión con Google para acceder al contenido.</p>
+      <button id="btnLoginGoogle" class="btn btn-prim">Iniciar sesión con Google</button>
+      <p id="msjCapa" class="msj"></p>
+    </section>
+  </div>
+
+  <div id="capaContenido" class="oculto">
+    <header class="cabeza">
+      <div class="cabeza-fila">
+        <h1>MiAlbumWeb</h1>
+        <div class="sesion">
+          <span id="txtSesion"></span>
+          <button id="btnSalir" class="btn btn-sec">Salir</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="centro">
+      <p id="msjGlobal" class="msj"></p>
+
+      <section id="panelAdmin" class="tarjeta oculto">
+        <h2>Usuarios</h2>
+        <ul id="listaUsuarios" class="lista"></ul>
+
+        <h2>Invitaciones</h2>
+        <div class="fila">
+          <label>Rol
+            <select id="selRol">
+              <option value="colaborador">Colaborador</option>
+              <option value="visitante">Visitante</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="chkSubir" checked> Subir</label>
+          <label><input type="checkbox" id="chkBorrar"> Borrar</label>
+          <label><input type="checkbox" id="chkModificar"> Modificar</label>
+          <label>Expiración
+            <input type="text" id="inpExp" placeholder="indefinida o AAAA-MM-DD">
+          </label>
+          <button id="btnCrearInvitacion" class="btn btn-prim">Generar invitación</button>
+        </div>
+
+        <div id="salidaInvitacion" class="tarjeta-inv oculto">
+          <input id="enlaceInv" readonly>
+          <button id="btnCopiar" class="btn btn-sec">Copiar</button>
+          <img id="qrInv" alt="Código QR de invitación">
+        </div>
+
+        <ul id="listaInvitaciones" class="lista"></ul>
+      </section>
+
+      <section id="secSubir" class="tarjeta oculto">
+        <button id="btnSubir" class="btn btn-prim">Subir fotos</button>
+        <input type="file" id="inputSubir" accept="image/*" multiple hidden>
+      </section>
+
+      <section id="galeria" class="galeria"></section>
+    </main>
+  </div>
+
+  <div id="modalNombre" class="capa centrar oculto">
+    <form class="tarjeta" id="formNombre">
+      <h2>¿Cómo te llamas?</h2>
+      <input type="text" id="inpNombre" required placeholder="Tu nombre">
+      <button type="submit" class="btn btn-prim">Entrar al álbum</button>
+    </form>
+  </div>
+
+  <div id="modalFoto" class="capa centrar oculto">
+    <img id="imgGrande" alt="Foto">
+    <button id="btnCerrarFoto" class="btn btn-sec cerrar">Cerrar</button>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/drive.js"></script>
+  <script src="js/album.js"></script>
+</body>
+</html>
