@@ -1,4 +1,7 @@
-const Drive = {
+import { CONFIG } from "../config.js";
+import { AUTH } from "../auth.js";
+
+export const DriveApi = {
   h() {
     return AUTH.token ? { Authorization: "Bearer " + AUTH.token } : {};
   },
@@ -58,6 +61,37 @@ const Drive = {
     return r.json();
   },
 
+  subirConProgreso(meta, blob, nombre, onProgreso) {
+    return new Promise(function (res, rej) {
+      const fd = new FormData();
+      fd.append("metadata", new Blob([JSON.stringify(meta)], { type: "application/json" }));
+      fd.append("file", blob, nombre);
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", CONFIG.uploadBase + "/files?uploadType=multipart");
+      xhr.setRequestHeader("Authorization", "Bearer " + AUTH.token);
+      xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable && onProgreso) {
+          onProgreso(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try { res(JSON.parse(xhr.responseText)); }
+          catch (e) { rej(new Error("Respuesta inválida del servidor")); }
+        } else {
+          try {
+            const d = JSON.parse(xhr.responseText);
+            rej(new Error(d.error && d.error.message ? d.error.message : "Error " + xhr.status));
+          } catch (e2) {
+            rej(new Error("Error " + xhr.status));
+          }
+        }
+      };
+      xhr.onerror = function () { rej(new Error("Error de red al subir")); };
+      xhr.send(fd);
+    });
+  },
+
   crearCarpeta(nombre, cPadre) {
     return this.post({ name: nombre, mimeType: CONFIG.folderMime, parents: [cPadre] });
   },
@@ -78,34 +112,6 @@ const Drive = {
 
   compartir(id, rol) {
     return this.post({ role: rol, type: "anyone" }, CONFIG.apiBase + "/files/" + id + "/permissions");
-  },
-
-  buscarCarpeta(nombre, cPadre) {
-    const q = "name='" + nombre + "' and mimeType='" + CONFIG.folderMime + "' and '" + cPadre + "' in parents and trashed=false";
-    const self = this;
-    return this.list(q, "files(id,name)").then(function (f) {
-      return f[0] || self.crearCarpeta(nombre, cPadre);
-    });
-  },
-
-  pedirJsonCarpeta(nombre, cPadre) {
-    const q = "name='" + nombre + "' and '" + cPadre.id + "' in parents and trashed=false";
-    const self = this;
-    return this.list(q, "files(id,name)").then(function (f) {
-      if (f[0]) return f[0];
-      return self.crearJson(nombre, cPadre.id).then(function (creado) {
-        return self.actualizarJson(creado.id, {}).then(function () { return creado; });
-      });
-    });
-  },
-
-  async asegurarEstructura() {
-    const raiz = await this.buscarCarpeta(CONFIG.rootNombre, "root");
-    const inv = await this.pedirJsonCarpeta("invitaciones.json", raiz);
-    const users = await this.pedirJsonCarpeta("usuarios.json", raiz);
-    const fotos = await this.buscarCarpeta("fotos", raiz.id);
-    CONFIG.memo = { raiz: raiz.id, inv: inv.id, users: users.id, fotos: fotos.id };
-    return CONFIG.memo;
   },
 
   listarFotos(fId) {

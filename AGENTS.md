@@ -1,6 +1,50 @@
 # AGENTS.md
 
-Estado actual: **repo vacío** — no hay código todavía. Este archivo es la especificación del proyecto que hay que implementar. Consúltalo antes de escribir el primer archivo.
+Estado actual: **implementado y desplegado**. Este archivo es la especificación del proyecto y las convenciones vigentes. La base de código se organiza en módulos ES y CSS dividido por responsabilidad; **no añadir dependencias ni build tools**.
+
+Despliegue: `https://mialbumweb.netlify.app` (Netlify drag & drop). Al cambiar código, volver a subir la carpeta raíz del repo.
+ClientId OAuth: `622196535234-ddrlisjppqaivef385ncm17jvi22pojk.apps.googleusercontent.com` (origen autorizado incluye `https://mialbumweb.netlify.app`). La app NO se envía a verificación de Google (se usa tal cual).
+
+## Estructura de archivos
+
+```
+index.html · album.html · privacidad.html   # páginas; cada una carga 1 solo <script type="module">
+css/                                       # dividido por responsabilidad
+ ├── base.css        # reset, variables (claro/oscuro), animaciones, utilidades
+ ├── layout.css      # cabezo, contenedores, hero, tarjetas, pie
+ ├── components.css  # botones, chips, etiquetas, campos, listas, estadísticas, invitaciones
+ ├── gallery.css     # toolbar, buscador/orden, grilla, foto, skeleton, estados vacíos
+ ├── upload.css      # zona de subida, drag&drop, progreso
+ ├── modal.css       # capas, modales, lightbox
+ ├── toast.css       # notificaciones
+ └── responsive.css  # media queries
+js/
+ ├── config.js       # CONFIG (clientId, scope, raíz, mimes, memo con IDs del Drive destino)
+ ├── theme.js        # applyTema/initTema (localStorage "malbum-tema")
+ ├── util.js         # $, $$, toast, ICONOS
+ ├── auth.js         # AUTH: token en sessionStorage + login OAuth + quienSoy/salir
+ ├── drive/
+ │   ├── api.js      # DriveApi: capa REST de Drive (get/post/list/leer/borrar/subir/…compartir)
+ │   └── structure.js# asegurarEstructura() (crea MiAlbumWeb_Config y JSONs) + compartirAlbum()
+ ├── album/
+ │   ├── state.js    # estado de sesión (rol/permisos/fotos/caché/filtros) + cargarJson/visibles
+ │   ├── gallery.js  # render de galería (tarjetas, imágenes, búsqueda/orden, contador)
+ │   ├── lightbox.js # visor con teclado y descarga
+ │   ├── upload.js   # subida con progreso (dropzone + input)
+ │   ├── admin.js    # panel: stats, usuarios, invitaciones, QR, revocar
+ │   └── controller.js # punto de entrada del álbum: login, flujos owner/invitado, delegación de eventos
+ ├── index.js        # punto de entrada de la portada
+```
+
+## Convenciones de código
+
+- **JS en módulos ES** (`export`/`import`, con extensión `.js`). Cada página carga un único `<script type="module">`. Sin `type="module"` no funcionan los `import`; al probar en local se necesita servidor (no abrir `file://`).
+- Los módulos de dominio (`drive/`, `auth`) no tocan el DOM; las vistas (`album/`) sí.
+- `drive/api.js` y `drive/structure.js`: `this` válido solo invocando métodos como `DriveApi.x()`; no pasar métodos sueltos sin binder.
+- El estado vive en `album/state.js`; los módulos lo importan (sin módulo de eventos/`this`).
+- `CONFIG.memo` se llena con `asegurarEstructura()`: `{ raiz, inv, users, fotos }`. La URL de invitación lleva `drive`, `token`, `inv`, `users`, `fotos`.
+- Verificar sintaxis ESM sin tocar el repo: copiar los `.js` a `.mjs` temporales y `node --check`.
+- Front-end en español salvo navegación técnica del navegador. La portada (`index.html`) NO debe mostrar detalles técnicos (nada de "sin servidores", "Drive", "base de datos", "HTML5+CSS3+JS") — copy pensada para el usuario final.
 
 ## Concepto
 

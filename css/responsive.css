@@ -1,0 +1,11 @@
+@media (max-width: 640px) {
+  .fila-tools { flex-direction: column; align-items: stretch; }
+  .buscador { max-width: none; }
+  .fila-campos-2 { grid-template-columns: 1fr; }
+  .campo-checks { grid-template-columns: 1fr; }
+  .hero { padding-top: 44px; }
+  .galeria { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .cabeza-fila { padding: 10px 16px; }
+  .centro { padding: 0 16px; }
+  .sesion .txt { display: none; }
+}

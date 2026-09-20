@@ -1,4 +1,6 @@
-const AUTH = {
+import { CONFIG } from "./config.js";
+
+export const AUTH = {
   token: null,
   client: null,
   user: null,
@@ -8,14 +10,14 @@ const AUTH = {
   },
 
   cargarScript() {
-    return new Promise((res, rej) => {
+    return new Promise(function (res, rej) {
       if (window.google && window.google.accounts) return res();
       const s = document.createElement("script");
       s.src = "https://accounts.google.com/gsi/client";
       s.async = true;
       s.defer = true;
-      s.onload = () => res();
-      s.onerror = () => rej(new Error("No se pudo cargar la librería de Google"));
+      s.onload = function () { res(); };
+      s.onerror = function () { rej(new Error("No se pudo cargar la librería de Google")); };
       document.head.appendChild(s);
     });
   },
@@ -31,9 +33,9 @@ const AUTH = {
             if (r.access_token) {
               self.token = r.access_token;
               sessionStorage.setItem("MiAlbumWeb_token", r.access_token);
-              if (self._cb) { var c = self._cb; self._cb = null; c(); }
+              if (self._cb) { const c = self._cb; self._cb = null; c(); }
             } else if (self._err) {
-              var e = self._err; self._err = null;
+              const e = self._err; self._err = null;
               e(new Error(r.error_description || r.error || "Inicio de sesión no completado"));
             }
           }

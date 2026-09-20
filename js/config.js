@@ -1,4 +1,4 @@
-const CONFIG = {
+export const CONFIG = {
   clientId: "622196535234-ddrlisjppqaivef385ncm17jvi22pojk.apps.googleusercontent.com",
   scope: "https://www.googleapis.com/auth/drive.file",
   rootNombre: "MiAlbumWeb_Config",

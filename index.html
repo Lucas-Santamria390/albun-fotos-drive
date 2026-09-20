@@ -3,29 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MiAlbumWeb: crea tu álbum de fotos colaborativo y gratis. Guarda tus buenos momentos y compártelos con quien quieras.">
   <title>MiAlbumWeb — Álbum colaborativo</title>
-  <link rel="stylesheet" href="css/style.css">
+  <script>try { document.documentElement.setAttribute("data-tema", localStorage.getItem("malbum-tema") || "claro"); } catch (e) {}</script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366f1'/%3E%3Cstop offset='1' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ccircle cx='32' cy='34' r='13' fill='none' stroke='white' stroke-width='5'/%3E%3Ccircle cx='32' cy='34' r='5.5' fill='white'/%3E%3Crect x='14' y='16' width='10' height='10' rx='3' fill='white' opacity='.9'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/gallery.css">
+  <link rel="stylesheet" href="css/upload.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/toast.css">
+  <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
+
   <header class="cabeza">
-    <h1>MiAlbumWeb</h1>
-    <p class="sub">Álbum colaborativo, descentralizado y 100% gratuito.</p>
+    <div class="cabeza-fila">
+      <div class="brand">
+        <span class="logo">
+          <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="8.5" cy="10.5" r="1.6"/><path d="M3 16l4.4-4.2a1.4 1.4 0 0 1 2 0L14 16"/><path d="M14.5 14.5l1.6-1.5a1.4 1.4 0 0 1 2 0L21 15.5"/></svg>
+        </span>
+        <h1>MiAlbumWeb</h1>
+      </div>
+      <div class="sesion">
+        <button id="btnLoginNav" class="btn btn-prim btn-login">
+          <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Iniciar sesión
+        </button>
+        <button id="btnTema" class="interruptor" role="switch" aria-checked="false" title="Cambiar tema" aria-label="Cambiar tema">
+          <span class="interruptor-bola">
+            <svg class="icono icono-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke-linecap="round"/></svg>
+            <svg class="icono icono-luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          </span>
+        </button>
+      </div>
+    </div>
   </header>
 
   <main class="centro">
+    <section class="hero">
+      <span class="logo-grande">
+        <svg class="ico-grande" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="4" width="20" height="16" rx="4"/><circle cx="8.5" cy="10.5" r="1.8"/><path d="M2 16.5l4.4-4.2a1.6 1.6 0 0 1 2.2 0L14 17.5" stroke-linecap="round"/><path d="M14.8 15l1.5-1.4a1.6 1.6 0 0 1 2.2 0L22 17" stroke-linecap="round"/></svg>
+      </span>
+      <h1>Tu álbum de fotos,<br>en tu propia nube.</h1>
+      <p>Guarda tus buenos momentos y compártelos con la gente que quieres. Rápido, sencillo y privado.</p>
+    </section>
+
+    <section class="fila-tarjetas">
+      <div class="mini-tarjeta">
+        <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7M21 3v6h-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h3>100% gratis</h3>
+        <p>Crea tu álbum sin pagar nada. Sin cuotas ni suscripciones.</p>
+      </div>
+      <div class="mini-tarjeta">
+        <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 4.6v5.2c0 5.2-3.8 8.6-9 10.2-5.2-1.6-9-5-9-10.2V6.6z" stroke-linejoin="round"/><path d="M9 12l2 2 4-4"/></svg>
+        <h3>Tus datos, tu control</h3>
+        <p>Tus fotos se guardan en un sitio privado y nadie más que tú decide quién entra.</p>
+      </div>
+      <div class="mini-tarjeta">
+        <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-linecap="round"/></svg>
+        <h3>Compartir en un clic</h3>
+        <p>Invita por enlace o código QR y decide quién puede subir fotos.</p>
+      </div>
+    </section>
+
     <section class="tarjeta login">
       <h2>Entra con tu cuenta de Google</h2>
-      <p>Tu álbum y tus fotos viven en tu propio Google Drive. Al iniciar sesión se crea automáticamente la estructura necesaria.</p>
-      <button id="btnLogin" class="btn btn-prim">Iniciar sesión con Google</button>
-      <p id="msj" class="msj"></p>
+      <p>En unos segundos tendrás tu álbum listo. Sin instalaciones ni complicaciones.</p>
+      <button id="btnLogin" class="btn btn-prim btn-login">
+        <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15.5 8.5a4 4 0 1 0 0 7" stroke-linecap="round"/></svg>
+        Iniciar sesión con Google
+      </button>
+      <p id="msj" class="mar-gen"></p>
     </section>
   </main>
 
-  <footer class="pie">Hecho con HTML5 + CSS3 + JavaScript vainilla. Sin servidores y sin costes.</footer>
+  <footer class="pie">MiAlbumWeb · Tu álbum, tus recuerdos</footer>
 
-  <script src="js/config.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/drive.js"></script>
-  <script src="js/index.js"></script>
+  <script type="module" src="js/index.js"></script>
 </body>
 </html>
