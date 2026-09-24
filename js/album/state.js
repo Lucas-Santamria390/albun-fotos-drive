@@ -14,7 +14,9 @@ export const state = {
   cache: {},
   invitacionActual: "",
   txBusqueda: "",
-  orden: "recientes"
+  orden: "recientes",
+  selActivo: false,
+  fsSel: []
 };
 
 export function puedeSubir() {
@@ -23,6 +25,23 @@ export function puedeSubir() {
 
 export function puedeBorrar() {
   return !!(state.permisos && state.permisos.borrar);
+}
+
+export function toggleSel(id) {
+  const i = state.fsSel.indexOf(id);
+  if (i >= 0) {
+    state.fsSel.splice(i, 1);
+  } else {
+    state.fsSel.push(id);
+  }
+}
+
+export function limpiarSel() {
+  state.fsSel = [];
+}
+
+export function selIds() {
+  return state.fsSel.slice();
 }
 
 export async function cargarJson(id) {

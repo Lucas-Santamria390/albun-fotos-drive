@@ -2,13 +2,14 @@ import { $, toast, mostrarCarga, ocultarCarga } from "../util.js";
 import { applyTema, initTema } from "../theme.js";
 import { AUTH } from "../auth.js";
 import { DriveApi } from "../drive/api.js";
-import { state, cargarJson, cargarFotos, puedeSubir } from "./state.js";
+import { state, cargarJson, cargarFotos, puedeSubir, puedeBorrar } from "./state.js";
 import { renderGaleria } from "./gallery.js";
 import { abrirLightbox, cerrarLightbox, navegarFoto, initLightbox } from "./lightbox.js";
 import { initUpload } from "./upload.js";
 import { iniciarOwner } from "./admin.js";
 import { prepararSesion, renderSesion, salir, mostrarGateError } from "./sesion.js";
-import { solicitarBorrar, initBorrar, cerrarConfirm, modalConfirmAbierto } from "./borrar.js";
+import { solicitarBorrar, solicitarBorrarSel, initBorrar, cerrarConfirm, modalConfirmAbierto } from "./borrar.js";
+import { entrarSeleccion, cancelarSeleccion, toggleEnSeleccion, haySeleccion } from "./seleccion.js";
 
 function comenzarLogin() {
   const msj = $("#msjCapa");
@@ -101,11 +102,16 @@ async function cargarGaleria() {
 function renderBotones() {
   $("#btnAjustes").classList.toggle("oculto", state.modo !== "owner");
   $("#secSubir").classList.toggle("oculto", !puedeSubir());
+  $("#btnSel").classList.toggle("oculto", !puedeBorrar());
 }
 
 function clickGaleria(e) {
   const tar = e.target.closest(".foto");
   if (!tar) return;
+  if (haySeleccion()) {
+    toggleEnSeleccion(tar.dataset.id);
+    return;
+  }
   if (e.target.closest("[data-accion='borrar']")) {
     solicitarBorrar(tar.dataset.id);
     return;
@@ -121,8 +127,12 @@ function teclas(e) {
     if (e.key === "Escape") cerrarLightbox();
     return;
   }
-  if (modalConfirmAbierto() && e.key === "Escape") {
-    cerrarConfirm();
+  if (e.key === "Escape") {
+    if (haySeleccion()) {
+      cancelarSeleccion();
+      return;
+    }
+    if (modalConfirmAbierto()) cerrarConfirm();
   }
 }
 
@@ -141,6 +151,9 @@ function init() {
   $("#btnLoginGoogle").addEventListener("click", comenzarLogin);
   $("#formNombre").addEventListener("submit", enviarNombre);
   $("#btnRefrescar").addEventListener("click", cargarGaleria);
+  $("#btnSel").addEventListener("click", entrarSeleccion);
+  $("#btnSelCancelar").addEventListener("click", cancelarSeleccion);
+  $("#btnSelBorrar").addEventListener("click", solicitarBorrarSel);
   $("#inpBuscar").addEventListener("input", function (e) {
     state.txBusqueda = e.target.value.trim();
     renderGaleria();

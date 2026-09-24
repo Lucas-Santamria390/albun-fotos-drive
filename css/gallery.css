@@ -126,6 +126,28 @@ select.filtro:focus { outline: none; border-color: var(--primario); }
 .foto .borrar:hover { background: var(--rojo); }
 .foto .borrar .icono { width: 16px; height: 16px; }
 
+.galeria.modo-sel .foto { cursor: pointer; }
+.galeria.modo-sel .foto .borrar { display: none; }
+.foto .sel-marca {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  border: 2px solid var(--texto-suave);
+  color: #fff;
+  display: none;
+  place-items: center;
+  pointer-events: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.galeria.modo-sel .sel-marca { display: grid; }
+.foto .sel-marca .icono { width: 15px; height: 15px; }
+.foto.sel { box-shadow: 0 0 0 3px var(--primario); border-color: var(--primario); }
+.foto.sel .sel-marca { background: var(--primario); border-color: var(--primario); }
+
 .foto .fallo-img {
   position: absolute;
   inset: 0;

@@ -32,7 +32,8 @@ js/
  │   ├── gallery.js  # render de galería (tarjetas, imágenes, búsqueda/orden, contador)
  │   ├── lightbox.js # visor con teclado y descarga
  │   ├── upload.js   # subida con progreso (dropzone + input)
- │   ├── borrar.js   # borrado de fotos con confirmación (solicitar/ejecutar/teclado)
+ │   ├── borrar.js   # borrado de fotos con confirmación (individual o en lote)
+ │   ├── seleccion.js # modo selección múltiple: entrar/salir, marcar y barra de acciones
  │   ├── admin.js    # panel admin: iniciarOwner, stats, usuarios, invitaciones, QR, revocar
  │   ├── ajustes.js  # punto de entrada de ajustes.html (solo dueño)
  │   └── controller.js # punto de entrada del álbum: login, flujos owner/invitado, delegación de eventos

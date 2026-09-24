@@ -12,7 +12,11 @@ function tarjetaFoto(f) {
   img.loading = "lazy";
   img.decoding = "async";
   t.appendChild(img);
-  if (state.permisos && state.permisos.borrar) {
+  const marca = document.createElement("span");
+  marca.className = "sel-marca";
+  marca.innerHTML = ICONOS.check;
+  t.appendChild(marca);
+  if (!state.selActivo && state.permisos && state.permisos.borrar) {
     const b = document.createElement("button");
     b.className = "borrar";
     b.title = "Eliminar foto";
@@ -20,11 +24,18 @@ function tarjetaFoto(f) {
     b.innerHTML = ICONOS.papelera;
     t.appendChild(b);
   }
+  if (state.selActivo && state.fsSel.indexOf(f.id) >= 0) t.classList.add("sel");
   const p = document.createElement("span");
   p.className = "pill";
   p.textContent = f.name || "Foto";
   t.appendChild(p);
   return t;
+}
+
+export function marcarSel(id) {
+  const f = document.querySelector('.foto[data-id="' + id + '"]');
+  if (!f) return;
+  f.classList.toggle("sel", state.fsSel.indexOf(id) >= 0);
 }
 
 export function cargarImagen(f, img) {
@@ -52,6 +63,7 @@ export function renderGaleria() {
   const secg = $("#galeria");
   if (!secg) return;
   secg.innerHTML = "";
+  secg.classList.toggle("modo-sel", !!state.selActivo);
   const vis = visibles();
 
   const tConteo = $("#txtConteo");
