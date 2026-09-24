@@ -6,7 +6,7 @@ export const AUTH = {
   user: null,
 
   init() {
-    this.token = localStorage.getItem("MiAlbumWeb_token") || null;
+    this.token = sessionStorage.getItem("MiAlbumWeb_token") || null;
   },
 
   cargarScript() {
@@ -32,11 +32,14 @@ export const AUTH = {
           callback: function (r) {
             if (r.access_token) {
               self.token = r.access_token;
-              localStorage.setItem("MiAlbumWeb_token", r.access_token);
+              sessionStorage.setItem("MiAlbumWeb_token", r.access_token);
               if (self._cb) { const c = self._cb; self._cb = null; c(); }
             } else if (self._err) {
               const e = self._err; self._err = null;
-              e(new Error(r.error_description || r.error || "Inicio de sesión no completado"));
+              e(Object.assign(
+                new Error(r.error_description || r.error || "Inicio de sesión no completado"),
+                { code: 401 }
+              ));
             }
           }
         });
@@ -55,7 +58,12 @@ export const AUTH = {
     return fetch(CONFIG.apiBase + "/about?fields=user", {
       headers: { Authorization: "Bearer " + this.token }
     }).then(function (r) {
-      if (!r.ok) throw new Error("No se pudo obtener la sesión");
+      if (!r.ok) {
+        throw Object.assign(
+          new Error(r.status === 401 ? "Tu sesión expiró. Inicia sesión de nuevo." : "No se pudo obtener la sesión"),
+          { code: r.status }
+        );
+      }
       return r.json();
     }).then(function (d) {
       self.user = d.user || { emailAddress: "", displayName: "" };
@@ -66,6 +74,6 @@ export const AUTH = {
   salir() {
     this.token = null;
     this.user = null;
-    localStorage.removeItem("MiAlbumWeb_token");
+    sessionStorage.removeItem("MiAlbumWeb_token");
   }
 };

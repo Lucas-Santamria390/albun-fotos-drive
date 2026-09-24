@@ -47,5 +47,5 @@ export function mostrarGateError(e) {
   $("#capaContenido").classList.add("oculto");
   $("#capaAuth").classList.remove("oculto");
   $("#msjCapa").textContent = e.message || "No se pudo conectar";
-  AUTH.salir();
+  if (e && e.code === 401) AUTH.salir();
 }

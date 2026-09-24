@@ -30,6 +30,15 @@ export function toast(msj, tipo) {
   }, 3600);
 }
 
+export function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export const ICONOS = {
   check: '<svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   img: '<svg class="icono borrar-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="8.5" cy="10.5" r="1.6"/><path d="M3 16l4.4-4.2a1.4 1.4 0 0 1 2 0L14 16"/></svg>',

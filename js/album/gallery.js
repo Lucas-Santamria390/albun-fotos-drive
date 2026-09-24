@@ -1,4 +1,4 @@
-import { $, ICONOS } from "../util.js";
+import { $, ICONOS, escapeHtml } from "../util.js";
 import { state, visibles } from "./state.js";
 import { DriveApi } from "../drive/api.js";
 
@@ -83,7 +83,7 @@ export function renderGaleria() {
   if (!vis.length) {
     secg.innerHTML =
       '<div class="vacio">' + ICONOS.img +
-      "<p>No hay resultados para \u201c" + state.txBusqueda + "\u201d.</p>" +
+      "<p>No hay resultados para \u201c" + escapeHtml(state.txBusqueda) + "\u201d.</p>" +
       "<small>Prueba con otro término o recarga la galería.</small></div>";
     return;
   }

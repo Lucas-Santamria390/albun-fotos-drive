@@ -51,7 +51,13 @@ async function entrarInvitado() {
     return;
   }
   state.fId = fId;
-  const [invs, usuarios] = await Promise.all([cargarJson(invId), cargarJson(usersId)]);
+  let invs, usuarios;
+  try {
+    [invs, usuarios] = await Promise.all([cargarJson(invId), cargarJson(usersId)]);
+  } catch (e) {
+    if (e && e.code === 404) throw new Error("La invitación no es válida o ya fue revocada.");
+    throw e;
+  }
   const inv = invs[token];
   if (!inv) {
     toast("Invitación no válida o ya no existe.", "error");

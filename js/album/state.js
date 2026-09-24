@@ -45,12 +45,8 @@ export function selIds() {
 }
 
 export async function cargarJson(id) {
-  try {
-    const t = await DriveApi.leer(id);
-    return t ? JSON.parse(t) : {};
-  } catch (e) {
-    return {};
-  }
+  const t = await DriveApi.leer(id);
+  return t ? JSON.parse(t) : {};
 }
 
 export async function cargarFotos() {

@@ -15,9 +15,15 @@ export const DriveApi = {
     }
   },
 
+  async err(r) {
+    const e = new Error(await this.msg(r));
+    e.code = r ? r.status : 0;
+    return e;
+  },
+
   async get(url) {
     const r = await fetch(url, { headers: this.h() });
-    if (!r.ok) throw new Error(await this.msg(r));
+    if (!r.ok) throw await this.err(r);
     return r.json();
   },
 
@@ -27,7 +33,7 @@ export const DriveApi = {
       headers: Object.assign({ "Content-Type": "application/json" }, this.h()),
       body: JSON.stringify(meta)
     });
-    if (!r.ok) throw new Error(await this.msg(r));
+    if (!r.ok) throw await this.err(r);
     return r.json();
   },
 
@@ -38,13 +44,13 @@ export const DriveApi = {
 
   async leer(id) {
     const r = await fetch(CONFIG.apiBase + "/files/" + id + "?alt=media", { headers: this.h() });
-    if (!r.ok) throw new Error(await this.msg(r));
+    if (!r.ok) throw await this.err(r);
     return r.text();
   },
 
   async borrar(id) {
     const r = await fetch(CONFIG.apiBase + "/files/" + id, { method: "DELETE", headers: this.h() });
-    if (!r.ok) throw new Error(await this.msg(r));
+    if (!r.ok) throw await this.err(r);
     return true;
   },
 
@@ -57,7 +63,7 @@ export const DriveApi = {
       body: fd,
       headers: this.h()
     });
-    if (!r.ok) throw new Error(await this.msg(r));
+    if (!r.ok) throw await this.err(r);
     return r.json();
   },
 
@@ -81,7 +87,9 @@ export const DriveApi = {
         } else {
           try {
             const d = JSON.parse(xhr.responseText);
-            rej(new Error(d.error && d.error.message ? d.error.message : "Error " + xhr.status));
+            const err = new Error(d.error && d.error.message ? d.error.message : "Error " + xhr.status);
+            err.code = xhr.status;
+            rej(err);
           } catch (e2) {
             rej(new Error("Error " + xhr.status));
           }
@@ -106,7 +114,7 @@ export const DriveApi = {
       headers: Object.assign({ "Content-Type": "application/json" }, this.h()),
       body: JSON.stringify(obj, null, 2)
     });
-    if (!r.ok) throw new Error(await this.msg(r));
+    if (!r.ok) throw await this.err(r);
     return r.json();
   },
 
@@ -120,7 +128,7 @@ export const DriveApi = {
 
   async fotoUrl(id) {
     const r = await fetch(CONFIG.apiBase + "/files/" + id + "?alt=media", { headers: this.h() });
-    if (!r.ok) throw new Error(await this.msg(r));
+    if (!r.ok) throw await this.err(r);
     return URL.createObjectURL(await r.blob());
   }
 };
