@@ -3,6 +3,8 @@ import { CONFIG } from "../config.js";
 import { state, cargarJson } from "./state.js";
 import { DriveApi } from "../drive/api.js";
 import { asegurarEstructura, compartirAlbum } from "../drive/structure.js";
+import { generarToken } from "../services/invitaciones.js";
+import { PERMISOS_ADMIN } from "../services/permisos.js";
 
 export function renderStats() {
   const u = $("#statUsuarios");
@@ -25,12 +27,12 @@ export async function iniciarOwner() {
     state.usuarios[state.yo] = {
       nombre: state.yoNombre,
       rol: "admin",
-      permisos: { subir: true, borrar: true, modificar: true }
+      permisos: PERMISOS_ADMIN
     };
     await DriveApi.actualizarJson(CONFIG.memo.users, state.usuarios);
   }
   state.rol = "admin";
-  state.permisos = state.usuarios[state.yo].permisos || { subir: true, borrar: true, modificar: true };
+  state.permisos = state.usuarios[state.yo].permisos || PERMISOS_ADMIN;
 }
 
 export function renderUsuarios() {
@@ -166,7 +168,7 @@ export async function crearInvitacion() {
     borrar: $("#chkBorrar").checked,
     modificar: $("#chkModificar").checked
   };
-  const token = "alb-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+  const token = generarToken();
   state.invitaciones[token] = { rol: rol, permisos: per, expiracion: exp };
   await DriveApi.actualizarJson(CONFIG.memo.inv, state.invitaciones);
   const enlace = construirEnlace(encodeURIComponent(token));

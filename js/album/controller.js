@@ -10,6 +10,8 @@ import { iniciarOwner } from "./admin.js";
 import { prepararSesion, renderSesion, salir, mostrarGateError } from "./sesion.js";
 import { solicitarBorrar, solicitarBorrarSel, initBorrar, cerrarConfirm, modalConfirmAbierto } from "./borrar.js";
 import { entrarSeleccion, cancelarSeleccion, toggleEnSeleccion, haySeleccion } from "./seleccion.js";
+import { validarInvitacion, permisosSegunRol } from "../services/invitaciones.js";
+import { PERMISOS_INICIALES } from "../services/permisos.js";
 
 function comenzarLogin() {
   const msj = $("#msjCapa");
@@ -58,18 +60,15 @@ async function entrarInvitado() {
     if (e && e.code === 404) throw new Error("La invitación no es válida o ya fue revocada.");
     throw e;
   }
-  const inv = invs[token];
-  if (!inv) {
-    toast("Invitación no válida o ya no existe.", "error");
+  const validacion = validarInvitacion(invs, token);
+  if (!validacion.ok) {
+    toast(validacion.motivo === "expirada" ? "Esta invitación ha expirado." : "Invitación no válida o ya no existe.", "error");
     return;
   }
-  if (inv.expiracion && inv.expiracion !== "indefinida" && new Date(inv.expiracion) < new Date()) {
-    toast("Esta invitación ha expirado.", "error");
-    return;
-  }
+  const inv = validacion.invitacion;
   state.usuarios = usuarios;
   if (!state.usuarios[state.yo]) {
-    state.permisos = inv.permisos || { subir: true, borrar: false, modificar: false };
+    state.permisos = permisosSegunRol(inv);
     state.rol = inv.rol;
     $("#modalNombre").classList.remove("oculto");
     $("#inpNombre").focus();
@@ -87,7 +86,7 @@ function enviarNombre(e) {
   state.usuarios[state.yo] = {
     nombre: nombre,
     rol: state.rol || "colaborador",
-    permisos: state.permisos || { subir: true, borrar: false, modificar: false }
+    permisos: state.permisos || PERMISOS_INICIALES
   };
   const reg = state.usuarios[state.yo];
   DriveApi.actualizarJson(state.params.get("users"), state.usuarios).then(function () {

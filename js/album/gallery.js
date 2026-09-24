@@ -1,6 +1,7 @@
 import { $, ICONOS, escapeHtml } from "../util.js";
 import { state, visibles } from "./state.js";
 import { DriveApi } from "../drive/api.js";
+import { estiloConteo } from "../services/galeria.js";
 
 function tarjetaFoto(f) {
   const t = document.createElement("div");
@@ -67,12 +68,9 @@ export function renderGaleria() {
   const vis = visibles();
 
   const tConteo = $("#txtConteo");
-  const total = state.fotos.length;
-  tConteo.textContent = total
-    ? (vis.length === total ? total + " foto" + (total === 1 ? "" : "s") : vis.length + " de " + total)
-    : "";
+  tConteo.textContent = estiloConteo(state.fotos.length, vis.length);
 
-  if (!total) {
+  if (!state.fotos.length) {
     secg.innerHTML =
       '<div class="vacio">' + ICONOS.fotos +
       "<p>Este álbum aún no tiene fotos.</p>" +

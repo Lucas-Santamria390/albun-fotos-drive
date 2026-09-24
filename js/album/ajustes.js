@@ -1,7 +1,7 @@
 import { $, mostrarCarga, ocultarCarga } from "../util.js";
 import { applyTema, initTema } from "../theme.js";
 import { AUTH } from "../auth.js";
-import { state, cargarFotos } from "./state.js";
+import { cargarFotos } from "./state.js";
 import { iniciarOwner, renderAdmin, crearInvitacion, copiarEnlace, clickInvitaciones, cambiarRol } from "./admin.js";
 import { prepararSesion, renderSesion, salir, mostrarGateError } from "./sesion.js";
 

@@ -1,4 +1,6 @@
 import { DriveApi } from "../drive/api.js";
+import { puedeSubir as tieneSubir, puedeBorrar as tieneBorrar } from "../services/permisos.js";
+import { filtrarOrdenar } from "../services/galeria.js";
 
 export const state = {
   params: null,
@@ -20,11 +22,11 @@ export const state = {
 };
 
 export function puedeSubir() {
-  return !!(state.permisos && state.permisos.subir);
+  return tieneSubir(state.permisos);
 }
 
 export function puedeBorrar() {
-  return !!(state.permisos && state.permisos.borrar);
+  return tieneBorrar(state.permisos);
 }
 
 export function toggleSel(id) {
@@ -57,15 +59,5 @@ export async function cargarFotos() {
 }
 
 export function visibles() {
-  const q = state.txBusqueda.toLowerCase();
-  let arr = state.fotos.filter(function (f) {
-    return !q || (f.name || "").toLowerCase().indexOf(q) >= 0;
-  });
-  const o = state.orden;
-  arr.sort(function (a, b) {
-    if (o === "antiguos") return new Date(a.createdTime) - new Date(b.createdTime);
-    if (o === "nombre") return (a.name || "").localeCompare(b.name || "", "es");
-    return new Date(b.createdTime) - new Date(a.createdTime);
-  });
-  return arr;
+  return filtrarOrdenar(state.fotos, state.txBusqueda, state.orden);
 }
