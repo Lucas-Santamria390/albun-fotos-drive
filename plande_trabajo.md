@@ -6,7 +6,7 @@ Este archivo es el control de ejecución de la refactorización. La especificaci
 
 - Una fase a la vez. No avanzar a la siguiente sin aprobar la anterior.
 - Después de cada cambio importante: verificar sintaxis ESM (copiar `.js` a `.mjs` temporales y `node --check`), revisar manualmente, commit corto.
-- NO agregar dependencias ni build tools (restricción de `AGENTS.md`).
+- **Dependencias/build**: permitidas SOLO si aportan valor real (criterios en `AGENTS.md`). Decidir caso a caso y documentarlas en README.
 - NO eliminar funcionalidades existentes.
 - Decisiones importantes → anotarlas abajo en "Registro de decisiones".
 
@@ -105,7 +105,7 @@ Verificados el 2026-09-24. Sintaxis ESM: OK (17 módulos, node --check).
 - [x] Definir flujo de datos.
 - [x] Definir estrategia de autenticación.
 - [x] Definir estrategia de Google Drive.
-- [x] Definir estrategia de testing (sin framework, respetando la restricción).
+- [x] Definir estrategia de testing (dependencias permitidas: evaluar Vitest/Testing Library/Playwright caso a caso).
 - [ ] Revisar y aprobar el plan con el usuario antes de tocar código.
 
 ### Estructura de carpetas propuesta
@@ -189,11 +189,11 @@ views     →  util/config/theme   (nunca a DriveApi directamente)
 - `compartir()` se revisa: intentar minimizar permisos y, como las invitaciones dependen de archivos compartidos, dejar documentada la limitación (no hay autoridad real sin backend). Medidas: tokens más largos, expiración por defecto opcional, revocación inmediata ya existente.
 - Caché de blobs se revoca correctamente (`URL.revokeObjectURL`) y se limita.
 
-**Estrategia de testing (sin framework ni build):**
+**Estrategia de testing (actualizada tras permitir dependencias):**
 
-- **Unit**: `node --test` (motor incluido en Node ≥18, no añade dependencias). Los servicios puros se copian a `.mjs` y se prueban.
+- **Unit**: `node --test` (motor incluido en Node ≥18) o **Vitest** si se quiere cobertura + mock elegante. Los servicios puros no dependen del DOM → se prueban directamente.
 - **Verificación ESM**: se conserva el truco actual (`node --check` sobre `.mjs` temporales).
-- **Componentes/E2E**: sin Playwright (sería dependencia). Se hace una **matriz de verificación manual** documentada en `plande_trabajo.md` (desktop/tablet/mobile + flujos críticos). En `refactorisacion.md` queda anotado que añadir Playwright quedaría fuera de la restricción del proyecto.
+- **Componentes/E2E**: opcional con **Testing Library** y/o **Playwright** (decisión caso a caso según complejidad alcanzada). Mínimo se hará la **matriz de verificación manual** documentada aquí (desktop/tablet/mobile + flujos críticos).
 
 **Ajustes de rutas (MPA, adaptados a este stack):**
 
@@ -348,4 +348,6 @@ Bloque urgente (2026-09-24, pendiente de commit):
 
 Fecha | Decisión | Motivo
 
-(rellenar aquí)
+2026-09-24 | Seguir con JS vainilla como base (sin framework de UI) | El proyecto ya está desplegado y funciona; el core permanece en JS puro. Se abren las dependencias para herramientas puntuales (tests, lint, QR) pero no se cambia la arquitectura frontend-estático + Google.
+2026-09-24 | Permitir dependencias/build tools (REGLAS ACTUALIZADAS en AGENTS.md) | El usuario autorizó quitar la prohibición de dependencias. Se mantienen criterios de valor real y "sin backend". Impacta: testing (Vitest/Playwright disponibles), lint/prettier, QR local, build opcional.
+2026-09-24 | Tests: `node --test`/Vitest para unit; Testing Library/Playwright opcionales para componentes/E2E | Antes estaba prohibido por la regla de dependencias; ahora se decide caso a caso.
