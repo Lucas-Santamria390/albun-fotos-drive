@@ -1,0 +1,134 @@
+---
+import Base from "../layouts/Base.astro";
+import Contenedor from "../components/layout/Contenedor.astro";
+import Boton from "../components/ui/Boton.astro";
+import ChipRol from "../components/ui/ChipRol.astro";
+import Tarjeta from "../components/ui/Tarjeta.astro";
+import Campo from "../components/ui/Campo.astro";
+import Skeleton from "../components/ui/Skeleton.astro";
+import EstadoVacio from "../components/ui/EstadoVacio.astro";
+import EstadoError from "../components/ui/EstadoError.astro";
+import DemoInteraccion from "../components/demo/DemoInteraccion.svelte";
+
+const secciones = [
+  { id: "botones", nombre: "Botones" },
+  { id: "roles", nombre: "Roles" },
+  { id: "campos", nombre: "Campos" },
+  { id: "tarjetas", nombre: "Tarjetas" },
+  { id: "estados", nombre: "Estados" },
+  { id: "interaccion", nombre: "Interacción" },
+];
+---
+
+<Base titulo="Kit de interfaz" noindex>
+  <Contenedor class="py-10 sm:py-14">
+    <header class="mb-8">
+      <p class="text-xs font-bold tracking-widest text-primario uppercase">Interno</p>
+      <h1 class="mt-2 text-3xl font-extrabold tracking-tight">Kit de interfaz</h1>
+      <p class="mt-2 max-w-2xl text-sm text-suave">
+        Catálogo vivo de componentes y tokens. Sirve para revisar variantes y estados antes de
+        montarlos en las páginas reales.
+      </p>
+    </header>
+
+    <nav class="mb-10 flex flex-wrap gap-2 text-sm" aria-label="Secciones del kit">
+      {
+        secciones.map((s) => (
+          <a href={`#${s.id}`} class="chip hover:border-primario hover:text-primario">
+            {s.nombre}
+          </a>
+        ))
+      }
+    </nav>
+
+    <section id="botones" class="scroll-mt-24 pb-12">
+      <h2 class="mb-4 text-xl font-bold">Botones</h2>
+      <Tarjeta>
+        <div class="flex flex-wrap items-center gap-2">
+          <Boton variante="prim">Primario</Boton>
+          <Boton variante="sec">Secundario</Boton>
+          <Boton variante="ghost">Fantasma</Boton>
+          <Boton variante="peligro">Peligro</Boton>
+          <Boton variante="prim" disabled>Deshabilitado</Boton>
+          <Boton variante="prim" cargando>Guardando…</Boton>
+        </div>
+        <div class="mt-5 flex flex-wrap items-center gap-2">
+          <Boton tamano="sm" variante="sec">Pequeño</Boton>
+          <Boton variante="sec">Mediano</Boton>
+          <Boton tamano="lg" variante="prim">Grande</Boton>
+        </div>
+      </Tarjeta>
+    </section>
+
+    <section id="roles" class="scroll-mt-24 pb-12">
+      <h2 class="mb-4 text-xl font-bold">Roles</h2>
+      <Tarjeta>
+        <div class="flex flex-wrap items-center gap-2">
+          <ChipRol rol="admin" />
+          <ChipRol rol="colaborador" />
+          <ChipRol rol="visitante" />
+          <span class="chip">chip neutro</span>
+        </div>
+      </Tarjeta>
+    </section>
+
+    <section id="campos" class="scroll-mt-24 pb-12">
+      <h2 class="mb-4 text-xl font-bold">Campos</h2>
+      <Tarjeta>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <Campo id="demo-nombre" etiqueta="Nombre" marcador="Tu nombre" ayuda="Se verá en el álbum." />
+          <Campo id="demo-fecha" etiqueta="Fecha" tipo="date" />
+          <Campo
+            id="demo-error"
+            etiqueta="Correo"
+            tipo="email"
+            marcador="tucorreo@ejemplo.com"
+            error="Ese correo no parece válido."
+          />
+          <Campo id="demo-buscar" etiqueta="Buscar" tipo="search" marcador="Buscar fotos…" />
+        </div>
+      </Tarjeta>
+    </section>
+
+    <section id="tarjetas" class="scroll-mt-24 pb-12">
+      <h2 class="mb-4 text-xl font-bold">Tarjetas</h2>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <Tarjeta>
+          <h3 class="font-bold">Tarjeta normal</h3>
+          <p class="mt-1 text-sm text-suave">Superficie con borde y sombra suave.</p>
+        </Tarjeta>
+        <Tarjeta interactiva>
+          <h3 class="font-bold">Tarjeta interactiva</h3>
+          <p class="mt-1 text-sm text-suave">Se eleva al pasar el cursor.</p>
+        </Tarjeta>
+      </div>
+    </section>
+
+    <section id="estados" class="scroll-mt-24 pb-12">
+      <h2 class="mb-4 text-xl font-bold">Estados</h2>
+      <div class="grid gap-4 lg:grid-cols-2">
+        <EstadoVacio titulo="Aún no hay fotos" detalle="Cuando subas la primera, aparecerá aquí.">
+          <Boton slot="accion" tamano="sm" variante="prim">Subir foto</Boton>
+        </EstadoVacio>
+
+        <EstadoError mensaje="No se pudo cargar el álbum" detalle="Revisa tu conexión e inténtalo de nuevo.">
+          <Boton slot="accion" tamano="sm" variante="sec">Reintentar</Boton>
+        </EstadoError>
+      </div>
+
+      <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Skeleton />
+        <Skeleton />
+        <Skeleton />
+        <Skeleton />
+      </div>
+    </section>
+
+    <section id="interaccion" class="scroll-mt-24 pb-12">
+      <h2 class="mb-4 text-xl font-bold">Interacción</h2>
+      <Tarjeta>
+        <DemoInteraccion client:load />
+      </Tarjeta>
+    </section>
+  </Contenedor>
+</Base>

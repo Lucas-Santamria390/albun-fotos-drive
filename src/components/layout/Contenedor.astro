@@ -1,0 +1,18 @@
+---
+interface Props {
+  class?: string;
+  estrecho?: boolean;
+}
+
+const { class: claseExtra = "", estrecho = false } = Astro.props;
+---
+
+<div
+  class:list={[
+    "mx-auto w-full px-4 sm:px-6",
+    estrecho ? "max-w-3xl" : "max-w-6xl",
+    claseExtra,
+  ]}
+>
+  <slot />
+</div>

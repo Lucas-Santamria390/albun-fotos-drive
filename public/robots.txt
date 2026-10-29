@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /album.html
+Disallow: /ajustes.html

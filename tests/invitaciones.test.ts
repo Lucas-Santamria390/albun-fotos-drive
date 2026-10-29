@@ -3,13 +3,14 @@ import {
   generarToken,
   invitacionExpirada,
   permisosSegunRol,
-  validarInvitacion
-} from "../js/services/invitaciones.js";
+  validarInvitacion,
+} from "../src/lib/services/invitaciones";
+import type { Invitacion } from "../src/lib/tipos";
 
-const colaborador = {
+const colaborador: Invitacion = {
   rol: "colaborador",
   permisos: { subir: true, borrar: false, modificar: false },
-  expiracion: "indefinida"
+  expiracion: "indefinida",
 };
 
 describe("invitaciones", () => {
@@ -19,6 +20,12 @@ describe("invitaciones", () => {
     expect(a).not.toBe(b);
     expect(a).toMatch(/^alb-[a-z0-9]+-[a-z0-9]{4,}$/);
     expect(b).toMatch(/^alb-/);
+  });
+
+  it("genera tokens con suficiente entropía", () => {
+    const token = generarToken();
+    const entropia = token.split("-")[2] ?? "";
+    expect(entropia).toHaveLength(32);
   });
 
   it("una invitación indefinida nunca expira", () => {
@@ -42,12 +49,14 @@ describe("invitaciones", () => {
   it("validarInvitacion acepta una invitación válida", () => {
     const res = validarInvitacion({ token1: colaborador }, "token1");
     expect(res.ok).toBe(true);
+    if (!res.ok) return;
     expect(res.invitacion.rol).toBe("colaborador");
   });
 
   it("validarInvitacion rechaza un token inexistente", () => {
     const res = validarInvitacion({ token1: colaborador }, "x");
     expect(res.ok).toBe(false);
+    if (res.ok) return;
     expect(res.motivo).toBe("invalida");
   });
 
@@ -55,6 +64,7 @@ describe("invitaciones", () => {
     const vencida = { ...colaborador, expiracion: "2020-01-01" };
     const res = validarInvitacion({ token1: vencida }, "token1", new Date("2024-01-01"));
     expect(res.ok).toBe(false);
+    if (res.ok) return;
     expect(res.motivo).toBe("expirada");
   });
 

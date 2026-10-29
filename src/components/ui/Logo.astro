@@ -1,0 +1,40 @@
+---
+interface Props {
+  grande?: boolean;
+  conTexto?: boolean;
+}
+
+const { grande = false, conTexto = true } = Astro.props;
+---
+
+<span class="inline-flex items-center gap-2.5">
+  <span
+    class:list={[
+      "grid place-items-center rounded-xl bg-gradient-to-br from-primario to-primario-2 text-white shadow-md",
+      grande ? "h-16 w-16" : "h-9 w-9",
+    ]}
+    aria-hidden="true"
+  >
+    <svg
+      class={grande ? "h-8 w-8" : "h-5 w-5"}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <rect x="3" y="5" width="18" height="14" rx="3"></rect>
+      <circle cx="8.5" cy="10.5" r="1.6"></circle>
+      <path d="M3 16l4.4-4.2a1.4 1.4 0 0 1 2 0L14 16"></path>
+      <path d="M14.5 14.5l1.6-1.5a1.4 1.4 0 0 1 2 0L21 15.5"></path>
+    </svg>
+  </span>
+  {
+    conTexto && (
+      <span class:list={["font-extrabold tracking-tight", grande ? "text-3xl" : "text-lg"]}>
+        MiAlbumWeb
+      </span>
+    )
+  }
+</span>

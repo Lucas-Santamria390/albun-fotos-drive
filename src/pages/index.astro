@@ -1,0 +1,318 @@
+---
+import Base from "../layouts/Base.astro";
+import Contenedor from "../components/layout/Contenedor.astro";
+import BotonLogin from "../components/acceso/BotonLogin.svelte";
+
+const beneficios = [
+  {
+    titulo: "100% gratis",
+    texto: "Crea tu álbum sin pagar nada. Sin cuotas, sin suscripciones y sin anuncios.",
+    icono: "gratis",
+  },
+  {
+    titulo: "Tus datos, tu control",
+    texto: "Las fotos se guardan en tu espacio personal y solo entra quien tú autorizas.",
+    icono: "escudo",
+  },
+  {
+    titulo: "Compartir en un clic",
+    texto: "Invita con un enlace o un código QR y decide quién puede subir fotos.",
+    icono: "personas",
+  },
+];
+
+const pasos = [
+  {
+    numero: "1",
+    titulo: "Entra con tu cuenta",
+    texto: "Un clic y ya tienes tu álbum listo. No hay formularios ni tarjetas de crédito.",
+  },
+  {
+    numero: "2",
+    titulo: "Sube tus fotos",
+    texto: "Arrastra las imágenes, elige varias a la vez y mira el progreso en vivo.",
+  },
+  {
+    numero: "3",
+    titulo: "Invita a quien quieras",
+    texto: "Comparte el enlace o el QR. Tú decides quién solo mira y quién también sube.",
+  },
+];
+
+const caracteristicas = [
+  {
+    titulo: "Galería adaptable",
+    texto: "Se ve igual de bien en el móvil que en el ordenador, con búsqueda y orden.",
+    icono: "grilla",
+  },
+  {
+    titulo: "Visor a pantalla completa",
+    texto: "Abre cualquier foto, pásalas con las flechas y descárgalas cuando quieras.",
+    icono: "expandir",
+  },
+  {
+    titulo: "Roles claros",
+    texto: "Administrador, colaborador o visitante: cada persona ve solo lo que debe.",
+    icono: "llave",
+  },
+  {
+    titulo: "Invitaciones con caducidad",
+    texto: "Genera enlaces que puedes revocar cuando ya no los necesites.",
+    icono: "reloj",
+  },
+  {
+    titulo: "Tema claro y oscuro",
+    texto: "Elige cómo se ve la app. Tu preferencia se recuerda en este dispositivo.",
+    icono: "tema",
+  },
+  {
+    titulo: "Sin instalar nada",
+    texto: "Funciona en el navegador. Ni app, ni descargas, ni configuraciones raras.",
+    icono: "nube",
+  },
+];
+
+const preguntas = [
+  {
+    p: "¿De verdad es gratis?",
+    r: "Sí. No hay planes de pago, ni límites de prueba, ni publicidad. El álbum usa el espacio que ya tienes en tu cuenta de Google.",
+  },
+  {
+    p: "¿Quién puede ver mis fotos?",
+    r: "Solo las personas que tú autorizas. Tú eres el dueño del álbum: puedes añadir invitados, cambiar sus permisos o revocar el acceso cuando quieras.",
+  },
+  {
+    p: "¿Puedo subir fotos desde el móvil?",
+    r: "Sí. La galería está pensada para el móvil: puedes elegir fotos de la cámara o del carrete directamente.",
+  },
+  {
+    p: "¿Qué pasa si borro una foto?",
+    r: "Se borra del álbum para todos, así que asegúrate antes. Solo el administrador puede eliminar fotos (o quien tenga ese permiso).",
+  },
+  {
+    p: "¿Necesito crear otra cuenta?",
+    r: "No. Usas tu cuenta de Google de siempre. MiAlbumWeb no guarda contraseñas ni datos de pago.",
+  },
+  {
+    p: "¿Puedo usar mi propio enlace?",
+    r: "Sí. Cada álbum tiene un enlace de invitación con permisos concretos. También puedes compartirlo como código QR.",
+  },
+];
+
+const iconos: Record<string, string> = {
+  gratis:
+    '<path d="M21 12a9 9 0 1 1-3-6.7M21 3v6h-6" stroke-linecap="round" stroke-linejoin="round"/>',
+  escudo:
+    '<path d="M12 2l9 4.6v5.2c0 5.2-3.8 8.6-9 10.2-5.2-1.6-9-5-9-10.2V6.6z" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>',
+  personas:
+    '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-linecap="round"/>',
+  grilla:
+    '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
+  expandir:
+    '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke-linecap="round" stroke-linejoin="round"/>',
+  llave:
+    '<circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3M17 6l3 3M14 9l3 3" stroke-linecap="round"/>',
+  reloj:
+    '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2" stroke-linecap="round" stroke-linejoin="round"/>',
+  tema:
+    '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke-linecap="round"/>',
+  nube:
+    '<path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.2 11.2 3.9 3.9 0 0 0 7 19z" stroke-linecap="round" stroke-linejoin="round"/>',
+};
+---
+
+<Base titulo="MiAlbumWeb — Álbum colaborativo de fotos">
+  <BotonLogin slot="acciones" variante="sec" texto="Iniciar sesión" client:load />
+
+  <!-- Hero -->
+  <section class="relative overflow-hidden pt-14 pb-16 sm:pt-20 sm:pb-24">
+    <div
+      class="pointer-events-none absolute -top-40 left-1/2 h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-primario/20 blur-3xl"
+      aria-hidden="true"
+    >
+    </div>
+
+    <Contenedor class="relative flex flex-col items-center text-center">
+      <span
+        class="mb-6 inline-flex items-center gap-2 rounded-full border border-borde bg-superficie/80 px-3.5 py-1.5 text-xs font-semibold text-suave shadow-sm"
+      >
+        <span class="h-1.5 w-1.5 rounded-full bg-exito" aria-hidden="true"></span>
+        Gratis, privado y sin complicaciones
+      </span>
+
+      <h1
+        class="max-w-3xl text-4xl leading-[1.08] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl"
+      >
+        Tu álbum de fotos,<br class="hidden sm:block" />
+        <span class="bg-gradient-to-br from-primario to-primario-2 bg-clip-text text-transparent">
+          en tu propia nube.
+        </span>
+      </h1>
+
+      <p class="mt-5 max-w-xl text-base leading-relaxed text-suave text-pretty sm:text-lg">
+        Guarda tus buenos momentos y compártelos con la gente que quieres. Rápido, sencillo y privado.
+      </p>
+
+      <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row">
+        <BotonLogin texto="Crear mi álbum" class="btn-lg" client:load />
+        <a href="#como-funciona" class="btn btn-ghost btn-lg">
+          Ver cómo funciona
+          <svg
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path d="M12 5v14M19 12l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </a>
+      </div>
+
+      <p class="mt-4 text-xs text-suave">No hace falta tarjeta. Ni instalar nada.</p>
+    </Contenedor>
+  </section>
+
+  <!-- Beneficios -->
+  <Contenedor>
+    <ul class="grid gap-4 sm:grid-cols-3">
+      {
+        beneficios.map((b) => (
+          <li class="tarjeta flex flex-col gap-3 p-5 sm:p-6">
+            <span
+              class="grid h-11 w-11 place-items-center rounded-md bg-primario-suave text-primario"
+              aria-hidden="true"
+            >
+              <svg
+                class="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                set:html={iconos[b.icono]}
+              />
+            </span>
+            <h2 class="text-base font-bold">{b.titulo}</h2>
+            <p class="text-sm leading-relaxed text-suave">{b.texto}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </Contenedor>
+
+  <!-- Cómo funciona -->
+  <section id="como-funciona" class="scroll-mt-24 py-20">
+    <Contenedor>
+      <div class="mx-auto max-w-2xl text-center">
+        <p class="text-xs font-bold tracking-widest text-primario uppercase">Cómo funciona</p>
+        <h2 class="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+          Listo en menos de un minuto
+        </h2>
+        <p class="mt-3 text-suave">
+          Tres pasos y tus recuerdos están donde quieres que estén.
+        </p>
+      </div>
+
+      <ol class="mt-10 grid gap-4 sm:grid-cols-3">
+        {
+          pasos.map((paso) => (
+            <li class="relative flex flex-col gap-3 rounded-lg border border-borde bg-superficie-2/50 p-6">
+              <span
+                class="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-primario to-primario-2 font-bold text-white"
+                aria-hidden="true"
+              >
+                {paso.numero}
+              </span>
+              <h3 class="font-bold">{paso.titulo}</h3>
+              <p class="text-sm leading-relaxed text-suave">{paso.texto}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </Contenedor>
+  </section>
+
+  <!-- Características -->
+  <section class="py-4">
+    <Contenedor>
+      <div class="mx-auto max-w-2xl text-center">
+        <p class="text-xs font-bold tracking-widest text-primario uppercase">Características</p>
+        <h2 class="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+          Todo lo que necesitas, nada que sobre
+        </h2>
+      </div>
+
+      <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          caracteristicas.map((c) => (
+            <li class="flex gap-3 rounded-lg border border-borde/70 p-5">
+              <span class="mt-0.5 shrink-0 text-primario" aria-hidden="true">
+                <svg
+                  class="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.9"
+                  set:html={iconos[c.icono]}
+                />
+              </span>
+              <div>
+                <h3 class="text-sm font-bold">{c.titulo}</h3>
+                <p class="mt-1 text-sm leading-relaxed text-suave">{c.texto}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </Contenedor>
+  </section>
+
+  <!-- Preguntas -->
+  <section id="preguntas" class="scroll-mt-24 py-20">
+    <Contenedor estrecho>
+      <div class="text-center">
+        <p class="text-xs font-bold tracking-widest text-primario uppercase">Preguntas frecuentes</p>
+        <h2 class="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">¿Tienes dudas?</h2>
+      </div>
+
+      <div class="mt-8 divide-y divide-borde overflow-hidden rounded-lg border border-borde bg-superficie">
+        {
+          preguntas.map((f) => (
+            <details class="group px-5 py-4 [&_summary::-webkit-details-marker]:hidden">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold">
+                {f.p}
+                <svg
+                  class="h-4 w-4 shrink-0 text-suave transition-transform duration-200 group-open:rotate-180"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </summary>
+              <p class="mt-3 text-sm leading-relaxed text-suave">{f.r}</p>
+            </details>
+          ))
+        }
+      </div>
+    </Contenedor>
+  </section>
+
+  <!-- CTA final -->
+  <Contenedor>
+    <div
+      class="relative overflow-hidden rounded-lg border border-borde bg-gradient-to-br from-primario to-primario-2 px-6 py-12 text-center text-white shadow-lg sm:px-12"
+    >
+      <h2 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Empieza tu álbum hoy</h2>
+      <p class="mx-auto mt-2 max-w-md text-sm text-white/85 sm:text-base">
+        Tus recuerdos merecen un sitio bonito, privado y para siempre.
+      </p>
+      <div class="mt-6 flex justify-center">
+        <BotonLogin texto="Crear mi álbum gratis" variante="sec" client:load />
+      </div>
+    </div>
+  </Contenedor>
+</Base>

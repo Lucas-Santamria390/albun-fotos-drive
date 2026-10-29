@@ -1,0 +1,42 @@
+---
+interface Props {
+  href?: string;
+  variante?: "prim" | "sec" | "ghost" | "peligro";
+  tamano?: "sm" | "md" | "lg";
+  tipo?: "button" | "submit" | "reset";
+  disabled?: boolean;
+  cargando?: boolean;
+  class?: string;
+}
+
+const {
+  href,
+  variante = "prim",
+  tamano = "md",
+  tipo = "button",
+  disabled = false,
+  cargando = false,
+  class: claseExtra = "",
+} = Astro.props;
+
+const clases = [
+  "btn",
+  `btn-${variante}`,
+  tamano !== "md" ? `btn-${tamano}` : "",
+  claseExtra,
+]
+  .filter(Boolean)
+  .join(" ");
+---
+
+{
+  href ? (
+    <a href={href} class={clases}>
+      <slot />
+    </a>
+  ) : (
+    <button type={tipo} class={clases} disabled={disabled || cargando} aria-busy={cargando}>
+      <slot />
+    </button>
+  )
+}

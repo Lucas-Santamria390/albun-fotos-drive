@@ -1,0 +1,24 @@
+---
+import Contenedor from "./Contenedor.astro";
+import Logo from "../ui/Logo.astro";
+import InterruptorTema from "../ui/InterruptorTema.svelte";
+
+interface Props {
+  inicio?: string;
+}
+
+const { inicio = "/" } = Astro.props;
+---
+
+<header class="sticky top-0 z-40 border-b border-borde bg-fondo/80 backdrop-blur-md">
+  <Contenedor class="flex h-16 items-center justify-between gap-4">
+    <a href={inicio} class="rounded-md no-underline" aria-label="MiAlbumWeb, inicio">
+      <Logo />
+    </a>
+
+    <nav class="flex items-center gap-1.5 sm:gap-2" aria-label="Acciones de la cuenta">
+      <slot />
+      <InterruptorTema client:load />
+    </nav>
+  </Contenedor>
+</header>

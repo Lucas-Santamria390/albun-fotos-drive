@@ -1,0 +1,14 @@
+---
+import Base from "../layouts/Base.astro";
+import AlbumApp from "../components/album/AlbumApp.svelte";
+---
+
+<Base
+  titulo="Mi álbum"
+  descripcion="Galería privada del álbum compartido."
+  noindex
+  cabecera={false}
+  pie={false}
+>
+  <AlbumApp client:load />
+</Base>

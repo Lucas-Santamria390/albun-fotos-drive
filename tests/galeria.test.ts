@@ -1,31 +1,28 @@
 import { describe, it, expect } from "vitest";
-import { filtrarOrdenar, estiloConteo } from "../js/services/galeria.js";
+import { filtrarOrdenar, estiloConteo } from "../src/lib/services/galeria";
+import type { Foto } from "../src/lib/tipos";
 
-const fotos = [
+const fotos: Foto[] = [
   { id: "a", name: "Nica", createdTime: "2024-01-02T00:00:00Z" },
   { id: "b", name: "Alba", createdTime: "2024-01-03T00:00:00Z" },
-  { id: "c", name: "Beta", createdTime: "2024-01-01T00:00:00Z" }
+  { id: "c", name: "Beta", createdTime: "2024-01-01T00:00:00Z" },
 ];
 
 describe("galería: filtro y orden", () => {
   it("por defecto ordena de más reciente a más antigua", () => {
-    const res = filtrarOrdenar(fotos, "", "recientes");
-    expect(res.map((f) => f.id)).toEqual(["b", "a", "c"]);
+    expect(filtrarOrdenar(fotos, "", "recientes").map((f) => f.id)).toEqual(["b", "a", "c"]);
   });
 
   it("orden antiguas primero", () => {
-    const res = filtrarOrdenar(fotos, "", "antiguos");
-    expect(res.map((f) => f.id)).toEqual(["c", "a", "b"]);
+    expect(filtrarOrdenar(fotos, "", "antiguos").map((f) => f.id)).toEqual(["c", "a", "b"]);
   });
 
   it("orden alfabético", () => {
-    const res = filtrarOrdenar(fotos, "", "nombre");
-    expect(res.map((f) => f.id)).toEqual(["b", "c", "a"]);
+    expect(filtrarOrdenar(fotos, "", "nombre").map((f) => f.id)).toEqual(["b", "c", "a"]);
   });
 
   it("filtra por término de búsqueda (sin importar mayúsculas)", () => {
-    const res = filtrarOrdenar(fotos, "ALB", "recientes");
-    expect(res.map((f) => f.id)).toEqual(["b"]);
+    expect(filtrarOrdenar(fotos, "ALB", "recientes").map((f) => f.id)).toEqual(["b"]);
   });
 
   it("término sin resultados devuelve lista vacía", () => {
@@ -39,7 +36,7 @@ describe("galería: filtro y orden", () => {
   });
 
   it("tolera entradas sin nombre o lista vacía", () => {
-    expect(filtrarOrdenar([{ id: "x" }], "", "recientes")).toHaveLength(1);
+    expect(filtrarOrdenar([{ id: "x", name: "" }], "", "recientes")).toHaveLength(1);
     expect(filtrarOrdenar([], "a", "recientes")).toEqual([]);
   });
 });

@@ -1,0 +1,16 @@
+---
+interface Props {
+  mensaje: string;
+  detalle?: string;
+}
+
+const { mensaje, detalle } = Astro.props;
+---
+
+<div class="anim-subir rounded-lg border border-peligro/40 bg-peligro-suave p-5" role="alert">
+  <p class="font-semibold text-peligro">{mensaje}</p>
+  {detalle && <p class="mt-1 text-sm text-texto">{detalle}</p>}
+  <div class="mt-4 empty:hidden">
+    <slot name="accion" />
+  </div>
+</div>

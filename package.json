@@ -5,6 +5,12 @@
   "description": "Álbum de fotos colaborativo 100% frontend (Google OAuth + Drive API + Netlify).",
   "type": "module",
   "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check && svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
@@ -13,9 +19,20 @@
     "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.12",
     "@eslint/js": "^10.0.1",
     "eslint": "^10.11.0",
     "prettier": "^3.9.9",
+    "svelte-check": "^4.7.7",
+    "typescript": "^6.0.3",
     "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "@astrojs/svelte": "^9.1.2",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.4.4",
+    "svelte": "^5.57.3",
+    "tailwindcss": "^4.3.3",
+    "uqr": "^0.1.3"
   }
 }

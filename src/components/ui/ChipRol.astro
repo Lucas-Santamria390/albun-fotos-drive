@@ -1,0 +1,20 @@
+---
+import type { Rol } from "../../lib/tipos";
+
+interface Props {
+  rol?: Rol | string;
+  class?: string;
+}
+
+const { rol = "visitante", class: claseExtra = "" } = Astro.props;
+
+const estilos: Record<string, string> = {
+  admin: "bg-primario-suave text-primario",
+  colaborador: "bg-exito-suave text-exito",
+  visitante: "bg-aviso-suave text-aviso",
+};
+
+const estilo = estilos[rol] ?? "bg-superficie-2 text-suave";
+---
+
+<span class:list={["etiqueta-rol", estilo, claseExtra]}>{rol}</span>

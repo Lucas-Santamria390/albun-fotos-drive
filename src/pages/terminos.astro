@@ -1,0 +1,76 @@
+---
+import Base from "../layouts/Base.astro";
+import Contenedor from "../components/layout/Contenedor.astro";
+import Prosa from "../components/ui/Prosa.astro";
+
+const actualizado = "28 de octubre de 2026";
+---
+
+<Base
+  titulo="Términos de uso"
+  descripcion="Condiciones de uso de MiAlbumWeb, el álbum de fotos colaborativo."
+>
+  <Contenedor estrecho class="py-12 sm:py-16">
+    <header class="mb-8">
+      <p class="text-xs font-bold tracking-widest text-primario uppercase">Legal</p>
+      <h1 class="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Términos de uso</h1>
+      <p class="mt-3 text-sm text-suave">Última actualización: {actualizado}</p>
+    </header>
+
+    <div class="tarjeta p-6 sm:p-8">
+      <Prosa>
+        <h2>1. Qué es MiAlbumWeb</h2>
+        <p>
+          MiAlbumWeb es una aplicación web gratuita para crear álbumes de fotos compartidos. No ofrece
+          almacenamiento propio: las fotos se guardan en la cuenta de Google Drive de la persona que
+          crea el álbum.
+        </p>
+
+        <h2>2. Tu cuenta de Google</h2>
+        <p>
+          Para usar la aplicación necesitas una cuenta de Google. Al entrar autorizas el acceso a los
+          archivos que MiAlbumWeb crea en tu Drive, y solo a esos. Puedes revocar ese permiso en
+          cualquier momento desde la configuración de seguridad de tu cuenta de Google.
+        </p>
+
+        <h2>3. Contenido</h2>
+        <p>
+          El contenido que subes es tuyo. Eres responsable de tener los derechos necesarios sobre las
+          fotos que compartes y de respetar la privacidad de las personas que aparecen en ellas.
+        </p>
+        <p>No está permitido subir contenido ilegal, abusivo o que vulnere derechos de terceros.</p>
+
+        <h2>4. Disponibilidad</h2>
+        <p>
+          El servicio se ofrece «tal cual», sin garantías. Puede haber interrupciones por
+          mantenimiento, por cambios en la API de Google Drive o por causas ajenas al proyecto. Se
+          recomienda mantener siempre una copia propia de las fotos importantes.
+        </p>
+
+        <h2>5. Límites del servicio</h2>
+        <p>
+          El espacio disponible depende de la cuota de tu cuenta de Google. MiAlbumWeb no amplía ni
+          gestiona esa cuota.
+        </p>
+
+        <h2>6. Eliminación de datos</h2>
+        <p>
+          Puedes eliminar el álbum completo borrando la carpeta <code>MiAlbumWeb_Config</code> de tu
+          Drive. Esa acción es irreversible desde la aplicación.
+        </p>
+
+        <h2>7. Cambios</h2>
+        <p>
+          Estos términos pueden actualizarse para reflejar mejoras del servicio. La fecha de la
+          última revisión aparece siempre al principio de esta página.
+        </p>
+
+        <h2>8. Contacto</h2>
+        <p>
+          Cualquier duda sobre estas condiciones:
+          <a href="mailto:lucas19krat@gmail.com">lucas19krat@gmail.com</a>.
+        </p>
+      </Prosa>
+    </div>
+  </Contenedor>
+</Base>

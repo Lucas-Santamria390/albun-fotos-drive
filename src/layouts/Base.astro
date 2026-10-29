@@ -1,0 +1,91 @@
+---
+import "../styles/global.css";
+import Cabecera from "../components/layout/Cabecera.astro";
+import Pie from "../components/layout/Pie.astro";
+import Toast from "../components/ui/Toast.svelte";
+
+interface Props {
+  titulo: string;
+  descripcion?: string;
+  noindex?: boolean;
+  cabecera?: boolean;
+  pie?: boolean;
+  claseMain?: string;
+}
+
+const {
+  titulo,
+  descripcion = "Tu álbum de fotos colaborativo. Guarda tus buenos momentos y compártelos con quien quieras.",
+  noindex = false,
+  cabecera = true,
+  pie = true,
+  claseMain = "",
+} = Astro.props;
+
+const tituloCompleto = titulo.includes("MiAlbumWeb") ? titulo : `${titulo} — MiAlbumWeb`;
+const canonica = new URL(Astro.url.pathname, Astro.site ?? "https://mialbumweb.netlify.app");
+const ogImagen = new URL("/og.svg", Astro.site ?? "https://mialbumweb.netlify.app");
+---
+
+<!doctype html>
+<html lang="es" data-tema="claro">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{tituloCompleto}</title>
+    <meta name="description" content={descripcion} />
+    <link rel="canonical" href={canonica.href} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <meta name="theme-color" content="#6366f1" />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MiAlbumWeb" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:title" content={tituloCompleto} />
+    <meta property="og:description" content={descripcion} />
+    <meta property="og:url" content={canonica.href} />
+    <meta property="og:image" content={ogImagen.href} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={tituloCompleto} />
+    <meta name="twitter:description" content={descripcion} />
+    <meta name="twitter:image" content={ogImagen.href} />
+
+    <!-- Aplica el tema antes del primer pintado para evitar el destello. -->
+    <script is:inline>
+      try {
+        document.documentElement.setAttribute(
+          "data-tema",
+          localStorage.getItem("malbum-tema") || "claro",
+        );
+      } catch (e) {
+        /* localStorage bloqueado */
+      }
+    </script>
+  </head>
+
+  <body class="flex min-h-dvh flex-col">
+    <a
+      href="#contenido"
+      class="sr-only rounded-md bg-superficie px-4 py-2 text-sm font-semibold focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50"
+      >Saltar al contenido</a
+    >
+
+    {
+      cabecera && (
+        <Cabecera>
+          <slot name="acciones" />
+        </Cabecera>
+      )
+    }
+
+    <main id="contenido" class:list={["flex-1", claseMain]}>
+      <slot />
+    </main>
+
+    {pie && <Pie />}
+
+    <Toast client:load />
+  </body>
+</html>

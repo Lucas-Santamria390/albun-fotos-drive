@@ -1,66 +1,64 @@
 # AGENTS.md
 
-Estado actual: **implementado y desplegado**. Este archivo es la especificación del proyecto y las convenciones vigentes. La base de código se organiza en módulos ES y CSS dividido por responsabilidad. **Sin backend propio (fundamental)**; dependencias y build tools SÍ están permitidas cuando aportan valor real (criterios abajo).
+Estado actual: **migrado a Astro + Tailwind + Svelte + TypeScript** (rama `feat/migracion-astro`). Este archivo es la especificación del proyecto y las convenciones vigentes. **Sin backend propio (fundamental)**; dependencias y build tools SÍ están permitidas cuando aportan valor real (criterios abajo).
 
-Despliegue: `https://mialbumweb.netlify.app` (Netlify drag & drop). Al cambiar código, volver a subir la carpeta raíz del repo.
+Despliegue: `https://mialbumweb.netlify.app` (Netlify desde Git: `npm run build` → `dist/`). El legado de `js/` y `css/` se conserva temporalmente sin uso y se elimina al cerrar la migración.
 ClientId OAuth: `622196535234-ddrlisjppqaivef385ncm17jvi22pojk.apps.googleusercontent.com` (origen autorizado incluye `https://mialbumweb.netlify.app`). La app NO se envía a verificación de Google (se usa tal cual).
 
 ## Estructura de archivos
 
 ```
-index.html · album.html · ajustes.html · privacidad.html   # páginas; cada una carga 1 solo <script type="module">
-css/                                       # dividido por responsabilidad
- ├── base.css        # reset, variables (claro/oscuro), animaciones, utilidades
- ├── layout.css      # cabezo, contenedores, hero, tarjetas, pie
- ├── components.css  # botones, chips, etiquetas, campos, listas, estadísticas, invitaciones
- ├── gallery.css     # toolbar, buscador/orden, grilla, foto, skeleton, estados vacíos
- ├── upload.css      # zona de subida, drag&drop, progreso
- ├── modal.css       # capas, modales, lightbox
- ├── toast.css       # notificaciones
- └── responsive.css  # media queries
-js/
- ├── config.js       # CONFIG (clientId, scope, raíz, mimes, memo con IDs del Drive destino)
- ├── theme.js        # applyTema/initTema (localStorage "malbum-tema")
- ├── util.js         # $, $$, toast, ICONOS
- ├── auth.js         # AUTH: token en sessionStorage + login OAuth + quienSoy/salir
- ├── drive/
- │   ├── api.js      # DriveApi: capa REST de Drive (get/post/list/leer/borrar/subir/…compartir)
- │   └── structure.js# asegurarEstructura() (crea MiAlbumWeb_Config y JSONs) + compartirAlbum()
- ├── album/
- │   ├── state.js    # estado de sesión (rol/permisos/fotos/caché/filtros) + cargarJson/cargarFotos/visibles
- │   ├── sesion.js   # helpers de sesión compartidos: salir, prepararSesion, renderSesion, mostrarGateError
- │   ├── gallery.js  # render de galería (tarjetas, imágenes, búsqueda/orden, contador)
- │   ├── lightbox.js # visor con teclado y descarga
- │   ├── upload.js   # subida con progreso (dropzone + input)
- │   ├── borrar.js   # borrado de fotos con confirmación (individual o en lote)
- │   ├── seleccion.js # modo selección múltiple: entrar/salir, marcar y barra de acciones
- │   ├── admin.js    # panel admin: iniciarOwner, stats, usuarios, invitaciones, QR, revocar
- │   ├── ajustes.js  # punto de entrada de ajustes.html (solo dueño)
- │   └── controller.js # punto de entrada del álbum: login, flujos owner/invitado, delegación de eventos
- ├── index.js        # punto de entrada de la portada
+astro.config.mjs · svelte.config.js · tsconfig.json · netlify.toml
+public/                                    # _headers, robots.txt, favicon.svg, og.svg
+src/
+ ├── layouts/Base.astro                    # head/SEO, tema pre-paint, cabecera, pie, toasts
+ ├── components/
+ │   ├── ui/        # Boton, Campo, ChipRol, Tarjeta, Prosa, Modal, Toast, InterruptorTema…
+ │   ├── layout/    # Cabecera, Pie, Contenedor
+ │   ├── acceso/    # BotonLogin (OAuth desde la portada)
+ │   ├── album/     # AlbumApp, Galeria, FotoCard, Lightbox, ZonaSubida, BarraSeleccion…
+ │   ├── ajustes/   # AjustesApp (invitaciones, usuarios, QR local)
+ │   └── demo/      # DemoInteraccion para /ui
+ ├── lib/
+ │   ├── tipos.ts      # Foto, Usuario, Invitacion, Permisos, Rol, ArchivoDrive, MemoEstructura
+ │   ├── config.ts     # CONFIG (clientId, scope, mimes, siteUrl, memo con IDs del Drive destino)
+ │   ├── auth.ts       # AUTH: token en sessionStorage + login OAuth + quienSoy/salir
+ │   ├── qr.ts         # QR local con uqr (SVG + data URL)
+ │   ├── drive/
+ │   │   ├── api.ts        # DriveApi: capa REST tipada (get/post/list/listarTodas/leer/borrar/subir…)
+ │   │   └── structure.ts  # asegurarEstructura() + compartirAlbum()
+ │   ├── services/     # puros, sin DOM ni red: permisos, invitaciones, galeria, enlaces, texto
+ │   └── stores/       # estado con runes: album.svelte.ts, toast.svelte.ts
+ ├── pages/            # index, album, ajustes, privacidad, terminos, 404, ui
+ └── styles/           # tokens.css (variables claro/oscuro) + global.css (Tailwind v4)
+tests/                 # Vitest sobre src/lib/services y qr
 ```
 
 ## Convenciones de código
 
-- **JS en módulos ES** (`export`/`import`, con extensión `.js`). Cada página carga un único `<script type="module">`. Sin `type="module"` no funcionan los `import`; al probar en local se necesita servidor (no abrir `file://`).
-- Los módulos de dominio (`drive/`, `auth`) no tocan el DOM; las vistas (`album/`) sí.
-- `drive/api.js` y `drive/structure.js`: `this` válido solo invocando métodos como `DriveApi.x()`; no pasar métodos sueltos sin binder.
-- El estado vive en `album/state.js`; los módulos lo importan (sin módulo de eventos/`this`).
-- `CONFIG.memo` se llena con `asegurarEstructura()`: `{ raiz, inv, users, fotos }`. La URL de invitación lleva `drive`, `token`, `inv`, `users`, `fotos`.
-- Verificar sintaxis ESM sin tocar el repo: copiar los `.js` a `.mjs` temporales y `node --check`.
+- **TypeScript** en `src/lib` (estricto) y **Svelte 5 con runes** (`$state`, `$derived`, `$props`, `$effect`) en los componentes. Las páginas son `.astro`.
+- Un único `<script type="module">` por página ya no aplica: el punto de entrada lo genera el build. En local hace falta servidor (`npm run dev`), nunca abrir `file://`.
+- **Regla de dependencias:** `páginas → componentes → stores → services → drive/auth → config`. Ningún componente importa `drive/api` directamente.
+- Los servicios (`src/lib/services`) son puros: sin DOM, sin red, sin estado global. Ahí van reglas como permisos, validación de invitaciones, filtros/orden y enlaces.
+- El estado vive en `src/lib/stores/album.svelte.ts` (clase con runes). No crear estado paralelo en componentes.
+- `drive/api.ts` y `drive/structure.ts`: `this` válido solo invocando métodos como `DriveApi.x()`; no pasar métodos sueltos sin binder.
+- `CONFIG.memo` se llena con `asegurarEstructura()`: `{ raiz, inv, users, fotos }`. La URL de invitación lleva `drive`, `token`, `inv`, `users`, `fotos`; el token se codifica dentro de `enlaceInvitacion()` (nunca dos veces).
+- Los módulos `.astro` no se pueden importar desde Svelte: los componentes compartidos dentro de islas deben ser `.svelte`.
+- No usar `innerHTML` con datos no confiables. Para SVG estático de iconos se usa `set:html` solo con literales del propio código.
+- `npm run check` y `npm test` deben pasar antes de commitear. `npm run build` debe generar `dist/` con `album.html` y `ajustes.html`.
 - **Dependencias y build tools:** permitidas solo si aportan valor real. Criterios para añadir una:
   1. Realmente necesaria (resolver un problema que el navegador/estándar no resuelva bien).
   2. Madura, mantenida y open source.
   3. Sin dependencias duplicadas ni paquete excesivamente grande para una función simple.
   4. Documentarla en README (para qué y por qué).
-  Ejemplos plausibles según el plan: ESLint, Prettier, Vitest, Testing Library, Playwright, generación de QR local, build/despliegue de Netlify. NO añadir herramientas "por defecto"; decidir caso a caso.
-- Front-end en español salvo navegación técnica del navegador. La portada (`index.html`) NO debe mostrar detalles técnicos (nada de "sin servidores", "Drive", "base de datos", "HTML5+CSS3+JS") — copy pensada para el usuario final.
+  Ya adoptadas: Astro, Tailwind, Svelte, TypeScript, `uqr` (QR local), Vitest, ESLint, Prettier. NO añadir herramientas "por defecto"; decidir caso a caso.
+- Front-end en español salvo navegación técnica del navegador. La portada (`src/pages/index.astro`) NO debe mostrar detalles técnicos (nada de "sin servidores", "Drive", "base de datos", "HTML5+CSS3+JS") — copy pensada para el usuario final.
 
 ## Concepto
 
-Álbum de fotos colaborativo **100% serverless y descentralizado**. No hay backend ni base de datos central: el frontend estático (HTML5 + CSS3 + **JavaScript vainilla**; el core es JS puro, con librerías/build tools opcionales cuando aporten valor real) alojado en **Netlify** habla directamente con la API REST de **Google Drive**. Cada usuario dueño usa su propia cuenta de Google Drive como servidor de almacenamiento y "base de datos" en archivos JSON.
+Álbum de fotos colaborativo **100% serverless y descentralizado**. No hay backend ni base de datos central: el frontend estático (Astro + Tailwind + islas Svelte, compilado a HTML/CSS/JS) alojado en **Netlify** habla directamente con la API REST de **Google Drive**. Cada usuario dueño usa su propia cuenta de Google Drive como servidor de almacenamiento y "base de datos" en archivos JSON.
 
-> Nota: la base sigue siendo JavaScript vainilla; se permiten añadir librerías/build tools cuando aporten valor real (criterios en «Convenciones de código»), sin cambiar la arquitectura.
+> Nota: el dominio y las reglas de negocio siguen en TypeScript puro y son testeables; el framework solo cubre la capa de presentación. La arquitectura no cambia: sin backend.
 
 - Hosting: Netlify (free tier, URL `*.netlify.app`).
 - Auth: **Google OAuth 2.0** con scope único `https://www.googleapis.com/auth/drive.file`.

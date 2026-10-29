@@ -1,0 +1,35 @@
+---
+interface Props {
+  titulo: string;
+  detalle?: string;
+  class?: string;
+}
+
+const { titulo, detalle, class: claseExtra = "" } = Astro.props;
+---
+
+<div class:list={["vacio anim-subir", claseExtra]}>
+  <div class="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-superficie-2 text-suave">
+    <slot name="icono">
+      <svg
+        class="h-7 w-7"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <rect x="3" y="5" width="18" height="14" rx="3"></rect>
+        <circle cx="8.5" cy="10.5" r="1.6"></circle>
+        <path d="M3 16l4.4-4.2a1.4 1.4 0 0 1 2 0L14 16"></path>
+      </svg>
+    </slot>
+  </div>
+  <p class="text-base font-semibold text-texto">{titulo}</p>
+  {detalle && <p class="mx-auto mt-1 max-w-sm text-sm">{detalle}</p>}
+  <div class="mt-4 empty:hidden">
+    <slot name="accion" />
+  </div>
+</div>

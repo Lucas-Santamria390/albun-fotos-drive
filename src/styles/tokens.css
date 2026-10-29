@@ -1,0 +1,70 @@
+/*
+ * Tokens de diseño — fuente única de verdad.
+ * Las páginas nuevas consumen estos valores vía Tailwind (@theme inline).
+ * El tema se controla con [data-tema="claro"|"oscuro"] en <html>.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Superficies y texto */
+  --fondo: #f4f6fc;
+  --fondo-grad-1: #eef1fb;
+  --fondo-grad-2: #fafbfe;
+  --superficie: #ffffff;
+  --superficie-2: #f1f3fb;
+  --texto: #1e293b;
+  --texto-suave: #64748b;
+  --borde: #e4e8f2;
+
+  /* Marca */
+  --primario: #6366f1;
+  --primario-2: #a855f7;
+  --primario-suave: #eef1ff;
+
+  /* Semánticos */
+  --peligro: #e11d48;
+  --peligro-suave: #ffe4e6;
+  --exito: #0f9d6a;
+  --exito-suave: #dcfce7;
+  --aviso: #b45309;
+  --aviso-suave: #fef3c7;
+
+  /* Elevación */
+  --sombra-sm: 0 2px 8px rgb(15 23 42 / 0.06);
+  --sombra-md: 0 8px 28px rgb(15 23 42 / 0.08);
+  --sombra-lg: 0 14px 40px rgb(15 23 42 / 0.14);
+
+  /* Formas */
+  --radio-sm: 8px;
+  --radio-md: 12px;
+  --radio-lg: 16px;
+
+  /* Movimiento */
+  --curva: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-rapida: 150ms;
+  --dur-media: 250ms;
+  --dur-lenta: 400ms;
+}
+
+[data-tema="oscuro"] {
+  color-scheme: dark;
+
+  --fondo: #0a0f1d;
+  --fondo-grad-1: #0a0f1d;
+  --fondo-grad-2: #111a33;
+  --superficie: #151b30;
+  --superficie-2: #1d2440;
+  --texto: #e6eaf5;
+  --texto-suave: #94a3b8;
+  --borde: #2a3250;
+
+  --primario-suave: #242c4a;
+  --peligro-suave: #43243a;
+  --exito-suave: #14333a;
+  --aviso-suave: #41311e;
+
+  --sombra-sm: 0 2px 8px rgb(0 0 0 / 0.35);
+  --sombra-md: 0 8px 28px rgb(0 0 0 / 0.45);
+  --sombra-lg: 0 14px 40px rgb(0 0 0 / 0.6);
+}

@@ -1,0 +1,14 @@
+---
+import Base from "../layouts/Base.astro";
+import AjustesApp from "../components/ajustes/AjustesApp.svelte";
+---
+
+<Base
+  titulo="Ajustes del álbum"
+  descripcion="Gestiona invitaciones, permisos y accesos de tu álbum compartido."
+  noindex
+  cabecera={false}
+  pie={false}
+>
+  <AjustesApp client:load />
+</Base>

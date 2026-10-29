@@ -1,0 +1,85 @@
+---
+import Base from "../layouts/Base.astro";
+import Contenedor from "../components/layout/Contenedor.astro";
+import Prosa from "../components/ui/Prosa.astro";
+
+const actualizado = "28 de octubre de 2026";
+---
+
+<Base
+  titulo="Política de Privacidad"
+  descripcion="Qué datos guarda MiAlbumWeb, dónde se almacenan y cómo puedes eliminarlos."
+>
+  <Contenedor estrecho class="py-12 sm:py-16">
+    <header class="mb-8">
+      <p class="text-xs font-bold tracking-widest text-primario uppercase">Legal</p>
+      <h1 class="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Política de Privacidad</h1>
+      <p class="mt-3 text-sm text-suave">Última actualización: {actualizado}</p>
+    </header>
+
+    <div class="tarjeta p-6 sm:p-8">
+      <Prosa>
+        <h2>Resumen</h2>
+        <p>
+          MiAlbumWeb es un álbum de fotos colaborativo. No tiene servidores propios ni base de datos
+          central: la aplicación funciona íntegramente en tu navegador y se conecta a tu propia cuenta
+          de Google Drive.
+        </p>
+
+        <h2>Datos que se almacenan</h2>
+        <p>
+          La aplicación guarda, dentro del Google Drive de cada usuario dueño, la siguiente
+          información:
+        </p>
+        <ul>
+          <li>Fotos e imágenes subidas al álbum.</li>
+          <li>
+            Un archivo <code>usuarios.json</code> con el correo, nombre y rol/permisos de los usuarios
+            autorizados.
+          </li>
+          <li>
+            Un archivo <code>invitaciones.json</code> con los tokens de invitación generados por el
+            administrador.
+          </li>
+        </ul>
+        <p>
+          Los permisos solicitados se limitan exclusivamente a <code>drive.file</code>: acceso solo a
+          los archivos que la propia aplicación crea. La aplicación no puede ver ni modificar el resto
+          de tu Drive.
+        </p>
+
+        <h2>Acceso a tus datos</h2>
+        <p>
+          Tus datos viven en tu cuenta de Google bajo tu control. Puedes eliminarlos en cualquier
+          momento borrando la carpeta <code>MiAlbumWeb_Config</code> de tu Drive. Los datos no se
+          comparten con terceros ni se venden.
+        </p>
+
+        <h2>Qué guarda tu navegador</h2>
+        <ul>
+          <li>
+            <strong>Token de acceso:</strong> se guarda en el almacenamiento de la sesión y se borra al
+            cerrar la pestaña. Nunca se envía a otro sitio que no sea Google.
+          </li>
+          <li>
+            <strong>Preferencia de tema:</strong> solo recuerda si prefieres el modo claro u oscuro.
+          </li>
+        </ul>
+        <p>No usamos cookies de publicidad ni herramientas de seguimiento de terceros.</p>
+
+        <h2>Servicios externos</h2>
+        <p>
+          La única conexión externa es la API oficial de Google Drive, necesaria para leer y guardar
+          tus fotos. Los códigos QR de invitación se generan en tu propio navegador: el enlace de
+          invitación no se envía a ningún servicio de terceros.
+        </p>
+
+        <h2>Contacto</h2>
+        <p>
+          Para consultas sobre privacidad o para solicitar la eliminación de tus datos, escribe a
+          <a href="mailto:lucas19krat@gmail.com">lucas19krat@gmail.com</a>.
+        </p>
+      </Prosa>
+    </div>
+  </Contenedor>
+</Base>

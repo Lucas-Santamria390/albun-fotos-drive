@@ -1,0 +1,23 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: claseExtra = "" } = Astro.props;
+---
+
+<div
+  class:list={[
+    "max-w-none text-[0.95rem] leading-relaxed text-suave",
+    "[&_h2]:mt-8 [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:tracking-tight [&_h2]:text-texto",
+    "[&_h3]:mt-6 [&_h3]:mb-1.5 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-texto",
+    "[&_p]:mt-2 [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5",
+    "[&_li]:leading-relaxed",
+    "[&_code]:rounded [&_code]:bg-superficie-2 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-[0.85em] [&_code]:text-texto",
+    "[&_a]:text-primario [&_a]:underline-offset-4 hover:[&_a]:underline",
+    "[&>*:first-child]:mt-0",
+    claseExtra,
+  ]}
+>
+  <slot />
+</div>
