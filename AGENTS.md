@@ -78,6 +78,7 @@ MiAlbumWeb_Config/          ← carpeta raíz creada automáticamente en el Driv
  ├── usuarios.json          # usuarios autorizados + roles/permisos
  ├── invitaciones.json      # tokens de invitación activos
  ├── album.json             # nombre visible del álbum
+ ├── ocultas.json           # ids de fotos ocultas del álbum
  └── fotos/                 # imágenes físicas del álbum
 ```
 
@@ -104,6 +105,12 @@ MiAlbumWeb_Config/          ← carpeta raíz creada automáticamente en el Driv
 { "nombre": "Cumple de Ana", "dueno": "dueno@correo.com", "creado": "2026-10-30T10:00:00.000Z" }
 ```
 
+`ocultas.json` — ids de fotos que no deben mostrarse en el álbum (se comparte como `writer`; ver «Restricciones y gotchas»):
+
+```json
+{ "ocultas": ["ID_FOTO_1", "ID_FOTO_2"] }
+```
+
 Si un JSON/carpeta no existe en el Drive del dueño al iniciar sesión, crearlo automáticamente. `album.json` solo se rellena si está vacío: nunca pisa un nombre ya elegido.
 
 ## Roles y permisos
@@ -116,26 +123,27 @@ Toda foto siempre se guarda en `fotos/`. Los permisos se validan contra `usuario
 
 ## Flujos clave (implementar tal cual)
 
-1. **Login:** botón "Registrarse"/"Iniciar sesión" en la portada → OAuth 2.0 (`drive`) → redirige a `/albumes.html` («Mis álbumes»). Desde el hub, el dueño abre su álbum personal; al hacerlo se verifica/crea `MiAlbumWeb_Config/` + JSONs y se comparten `usuarios.json`/`invitaciones.json`/`album.json`/`fotos/` para invitados.
+1. **Login:** botón "Registrarse"/"Iniciar sesión" en la portada → OAuth 2.0 (`drive`) → redirige a `/albumes.html` («Mis álbumes»). Desde el hub, el dueño abre su álbum personal; al hacerlo se verifica/crea `MiAlbumWeb_Config/` + JSONs y se comparten `usuarios.json`/`invitaciones.json`/`album.json`/`ocultas.json`/`fotos/` para invitados.
 2. **Invitaciones (página `ajustes.html`, solo dueño):** el admin elige rol/permisos → la app genera token único, lo guarda en `invitaciones.json` y crea la URL con el origen real:
-   `https://<origen-actual>/album.html?drive=ID_DRIVE_DUENO&token=TOKEN_SECRETO&inv=…&users=…&fotos=…&album=…`
-   - `album` es opcional: los enlaces emitidos antes de `album.json` siguen funcionando.
+   `https://<origen-actual>/album.html?drive=ID_DRIVE_DUENO&token=TOKEN_SECRETO&inv=…&users=…&fotos=…&album=…&ocultas=…`
+   - `album` y `ocultas` son opcionales: los enlaces emitidos antes de esos archivos siguen funcionando (sin ocultas, el invitado no ve la lista de fotos ocultas).
    - Generar QR en pantalla para compartir por móvil.
    - Al entrar: login con scope `drive`, validar token contra `invitaciones.json`, pedir nombre al invitado, registrarlo en `usuarios.json` y añadir el álbum a la lista local.
 3. **Ver fotos:** GET a Drive filtrando archivos dentro de `fotos/`, renderizar galería responsiva. Funciona igual para el dueño y para el invitado porque ambos usan el scope `drive` sobre la carpeta compartida.
 4. **Subir:** procesar imagen en cliente → POST a Drive en `fotos/` → actualizar UI al instante.
 5. **Álbumes múltiples (`/albumes.html`):** el hub muestra el álbum personal (siempre `/album.html` sin `drive`) y los álbumes compartidos guardados en `localStorage` bajo `MiAlbumWeb_albumes`. La lista nunca guarda tokens. «Unirme con un enlace» pega una URL o QR y navega a `album.html` conservando la query.
-6. **Volver a un álbum ya unido:** `enlaceAlbum()` construye `/album.html?drive=…&inv=…&users=…&fotos=…&album=…` sin token. Al abrirlo se detecta el modo por la presencia de `drive` y la pertenencia se valida contra `usuarios.json`; si la persona ya no está ahí, se muestra el error y la opción «Quitar de mi lista».
+6. **Volver a un álbum ya unido:** `enlaceAlbum()` construye `/album.html?drive=…&inv=…&users=…&fotos=…&album=…&ocultas=…` sin token. Al abrirlo se detecta el modo por la presencia de `drive` y la pertenencia se valida contra `usuarios.json`; si la persona ya no está ahí, se muestra el error y la opción «Quitar de mi lista».
 7. **Salir de un álbum:** desde el hub o desde la cabecera del álbum, el invitado elimina su propia entrada de `usuarios.json`, borra la fila local y vuelve a `/albumes.html`. No cierra la sesión. El admin no puede salir de su propio álbum.
 
 ## Restricciones y gotchas
 
 - **Sin backend tradicional:** toda la lógica corre en el navegador (JS vainilla), conectándose directo a la API REST de Drive con el token OAuth del usuario activo. No introducir servidores, funciones serverless propias ni bases de datos centrales. **Dependencias y build tools sí están permitidas** (criterios en «Convenciones de código»).
 - OAuth scope: único `drive` para dueño e invitado (ver «Concepto»). No volver a `drive.file`: rompe la visibilidad de las fotos subidas por otras cuentas.
-- Los archivos compartidos lo están como `anyone` (`writer` en `fotos/` y `usuarios.json`, `reader` en `invitaciones.json` y `album.json`) porque no hay backend que gestione permisos por email. El token de invitación protege la app, no el acceso directo a Drive: documentarlo como limitación.
+- Los archivos compartidos lo están como `anyone` (`writer` en `fotos/`, `usuarios.json` y `ocultas.json`, `reader` en `invitaciones.json` y `album.json`) porque no hay backend que gestione permisos por email. El token de invitación protege la app, no el acceso directo a Drive: documentarlo como limitación.
 - Al compartir, no silenciar errores: `compartirAlbum()` verifica el permiso real y el panel de ajustes muestra el aviso (`album.avisoCompartir`).
-- Las claves de estado/roles están en español (`usuarios.json`, `invitaciones.json`, `album.json`, `fotos/`, `admin`, `colaborador`): mantener la nomenclatura tal cual.
+- Las claves de estado/roles están en español (`usuarios.json`, `invitaciones.json`, `album.json`, `ocultas.json`, `fotos/`, `admin`, `colaborador`): mantener la nomenclatura tal cual.
 - Los tokens viajan en la query string (`?drive=...&token=...`): el token es la única autorización del colaborador, nunca hardcodearlo ni loguearlo. `album.html` sin token solo funciona para quien ya está en `usuarios.json`.
-- Las fotos subidas por un invitado son suyas en Drive: gastan su cuota y desaparecen si esa persona las borra. `DriveApi.borrar()` hace `DELETE`; si Drive responde 403 (archivo de otra cuenta) manda a la papelera con `PATCH {trashed:true}`. El dueño no puede borrar de forma permanente lo ajeno.
+- Las fotos subidas por un invitado son suyas en Drive: gastan su cuota y desaparecen si esa persona las borra. Solo el dueño de un archivo puede borrarlo (`files.delete`) o mandarlo a la papelera (`files.update {trashed:true}`); con otra cuenta Drive responde 403 `insufficientFilePermissions`. Por eso `DriveApi.borrar()` hace `DELETE` y el store, ante un 403, añade el id a `ocultas.json` para quitarla del álbum: la foto sigue existiendo en el Drive de quien la subió y el dueño no puede borrarla de forma permanente.
+- `ocultas.json` se comparte como `writer` para que un colaborador con permiso `borrar` también pueda ocultar fotos ajenas. No otorga más privilegio que `usuarios.json`, que ya es `writer`.
 - El invitado puede editar `usuarios.json` (está como `writer`) y por tanto los permisos de otras personas. Es una limitación heredada de no tener backend.
 - Salir de un álbum borra solo la entrada propia de `usuarios.json` y la fila local; no borra fotos ni cierra la sesión. El admin no puede salir de su propio álbum.
