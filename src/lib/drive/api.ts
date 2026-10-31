@@ -20,7 +20,7 @@ interface PermisoDrive {
   role?: string;
 }
 
-const CAMPOS_FOTO = "files(id,name,mimeType,thumbnailLink,createdTime,size)";
+const CAMPOS_FOTO = "files(id,name,mimeType,thumbnailLink,createdTime,size,owners(emailAddress))";
 
 function crearError(mensaje: string, code: number, reason?: string): ErrorHttp {
   const error = new Error(mensaje) as ErrorHttp;
@@ -113,19 +113,9 @@ export const DriveApi = {
       method: "DELETE",
       headers: this.h(),
     });
-    if (r.ok) return true;
-
-    const error = await this.err(r);
-    // Las fotos que subió un invitado son suyas: el dueño del álbum no puede
-    // borrarlas de forma permanente, pero sí mandarlas a la papelera.
-    if (error.code !== 403) throw error;
-
-    const papelera = await fetch(CONFIG.apiBase + "/files/" + id, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...this.h() },
-      body: JSON.stringify({ trashed: true }),
-    });
-    if (!papelera.ok) throw await this.err(papelera);
+    // Solo el dueño del archivo puede borrarlo. Si la foto la subió otra
+    // cuenta, Drive responde 403: el store la oculta del álbum en ese caso.
+    if (!r.ok) throw await this.err(r);
     return true;
   },
 

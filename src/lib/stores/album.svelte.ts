@@ -7,7 +7,9 @@ import { generarToken, permisosSegunRol, validarInvitacion } from "../services/i
 import { enlaceInvitacion } from "../services/enlaces";
 import { destinoEnlace, nombreAlbum } from "../services/albumes";
 import { mensajeAccesoAlbum } from "../services/errores";
-import { PERMISOS_ADMIN, puedeBorrar, puedeSubir } from "../services/permisos";
+import { PERMISOS_ADMIN } from "../services/permisos";
+import { agregarOcultas, filtrarOcultas, leerOcultas, quitarOcultas, serializarOcultas } from "../services/ocultas";
+import { agregarFotosAlGrupo, leerGrupos, quitarFotosDeGrupo, serializarGrupos } from "../services/grupos";
 import { albumes } from "./albumes.svelte";
 import type {
   AlbumInfo,
@@ -20,6 +22,7 @@ import type {
   Rol,
   Usuario,
   Usuarios,
+  Grupo,
 } from "../tipos";
 
 export type Fase = "cargando" | "auth" | "nombre" | "listo" | "error";
@@ -37,7 +40,7 @@ interface OpcionesInvitacion {
   expiracion: string;
 }
 
-const CAMPOS = "files(id,name,mimeType,thumbnailLink,createdTime,size)";
+const CAMPOS = "files(id,name,mimeType,thumbnailLink,createdTime,size,owners(emailAddress))";
 
 /**
  * Estado y casos de uso del álbum.
@@ -60,10 +63,18 @@ class EstadoAlbum {
   fId = $state("");
   /** Contenido de album.json (nombre visible). */
   info = $state<AlbumInfo | null>(null);
+  /** Ids de fotos ocultas del álbum (subidas por otras cuentas). */
+  ocultas = $state<string[]>([]);
+  grupos = $state<Grupo[]>([]);
 
+  todasFotos = $state<Foto[]>([]);
   fotos = $state<Foto[]>([]);
   busqueda = $state("");
   orden = $state<OrdenGaleria>("recientes");
+  grupoActivo = $state("");
+  subidorActivo = $state("");
+  fechaDesde = $state("");
+  fechaHasta = $state("");
 
   seleccionActiva = $state(false);
   seleccion = $state<string[]>([]);
@@ -84,15 +95,32 @@ class EstadoAlbum {
   #promesas = new Map<string, Promise<string>>();
   #contadorCola = 0;
 
-  visibles = $derived(filtrarOrdenar(this.fotos, this.busqueda, this.orden));
+  fotosFiltradas = $derived.by(() => {
+    const grupo = this.grupos.find((item) => item.id === this.grupoActivo);
+    return this.fotos.filter((foto) => {
+      const fecha = foto.createdTime?.slice(0, 10) ?? "";
+      return (
+        (!grupo || grupo.fotos.includes(foto.id)) &&
+        (!this.subidorActivo || foto.ownerEmail === this.subidorActivo) &&
+        (!this.fechaDesde || fecha >= this.fechaDesde) &&
+        (!this.fechaHasta || fecha <= this.fechaHasta)
+      );
+    });
+  });
+  visibles = $derived(filtrarOrdenar(this.fotosFiltradas, this.busqueda, this.orden));
   total = $derived(this.fotos.length);
-  puedeSubir = $derived(puedeSubir(this.permisos));
-  puedeBorrar = $derived(puedeBorrar(this.permisos));
+  puedeSubir = $derived(this.rol !== "visitante" && Boolean(this.yo));
+  puedeBorrar = $derived(this.rol !== "visitante" && Boolean(this.yo));
   seleccionadas = $derived(this.seleccion.length);
   esOwner = $derived(this.modo === "owner");
   nombre = $derived(nombreAlbum(this.info, this.esOwner ? "Mi álbum" : "Álbum compartido"));
 
   fotoActual = $derived(this.fotos.find((f) => f.id === this.fotoAbierta) ?? null);
+  papelera = $derived(
+    this.todasFotos.filter(
+      (foto) => this.ocultas.includes(foto.id) && foto.ownerEmail === this.yo,
+    ),
+  );
 
   // ---------------------------------------------------------------- sesión
 
@@ -174,6 +202,8 @@ class EstadoAlbum {
     await asegurarEstructura(this.yo ?? undefined);
     this.fId = CONFIG.memo.fotos;
     this.info = await this.#cargarInfo(CONFIG.memo.album);
+    this.ocultas = await this.#cargarOcultas(CONFIG.memo.ocultas ?? "");
+    this.grupos = await this.#cargarGrupos(CONFIG.memo.grupos ?? "");
 
     const [usuarios, invitaciones] = await Promise.all([
       this.cargarJson<Usuarios>(CONFIG.memo.users),
@@ -214,6 +244,8 @@ class EstadoAlbum {
     const usersId = params.get("users");
     const fotosId = params.get("fotos");
     const albumId = params.get("album") ?? "";
+    const ocultasId = params.get("ocultas") ?? "";
+    const gruposId = params.get("grupos") ?? "";
 
     if (!raizId || !invId || !usersId || !fotosId) {
       throw new Error("Este enlace de invitación está incompleto. Pide uno nuevo al administrador.");
@@ -221,9 +253,19 @@ class EstadoAlbum {
 
     // El invitado también necesita el memo: registrarNombre() escribe en
     // usuarios.json usando CONFIG.memo.users.
-    CONFIG.memo = { raiz: raizId, inv: invId, users: usersId, fotos: fotosId, album: albumId };
+    CONFIG.memo = {
+      raiz: raizId,
+      inv: invId,
+      users: usersId,
+      fotos: fotosId,
+      album: albumId,
+      ocultas: ocultasId,
+      grupos: gruposId,
+    };
     this.fId = fotosId;
     this.info = await this.#cargarInfo(albumId);
+    this.ocultas = await this.#cargarOcultas(ocultasId);
+    this.grupos = await this.#cargarGrupos(gruposId);
 
     let usuarios: Usuarios;
     try {
@@ -281,7 +323,7 @@ class EstadoAlbum {
     this.usuarios[this.yo] = {
       nombre: limpio,
       rol: this.rol ?? "colaborador",
-      permisos: this.permisos ?? { subir: true, borrar: false, modificar: false },
+      permisos: { subir: true, borrar: true, modificar: true },
     };
     this.yoNombre = limpio;
 
@@ -302,6 +344,25 @@ class EstadoAlbum {
     }
   }
 
+  /** Lee ocultas.json sin bloquear la apertura del álbum si no se puede. */
+  async #cargarOcultas(id: string): Promise<string[]> {
+    if (!id) return [];
+    try {
+      return leerOcultas(await DriveApi.leer(id));
+    } catch {
+      return [];
+    }
+  }
+
+  async #cargarGrupos(id: string): Promise<Grupo[]> {
+    if (!id) return [];
+    try {
+      return leerGrupos(await DriveApi.leer(id));
+    } catch {
+      return [];
+    }
+  }
+
   /** Guarda el álbum actual en la lista de este navegador (solo invitados). */
   #registrarEnLista(): void {
     if (this.modo !== "inv" || !this.yo || !CONFIG.memo.raiz) return;
@@ -314,6 +375,8 @@ class EstadoAlbum {
       users: CONFIG.memo.users,
       fotos: CONFIG.memo.fotos,
       album: CONFIG.memo.album || undefined,
+      ocultas: CONFIG.memo.ocultas || undefined,
+      grupos: CONFIG.memo.grupos || undefined,
       nombre: nombreAlbum(this.info),
       rol: this.rol ?? "colaborador",
       unido: new Date().toISOString(),
@@ -462,14 +525,17 @@ class EstadoAlbum {
 
   async recargarFotos(): Promise<void> {
     const archivos = await DriveApi.listarTodas("'" + this.fId + "' in parents and trashed=false", CAMPOS);
-    this.fotos = archivos.map((a) => ({
+    const fotos = archivos.map((a) => ({
       id: a.id,
       name: a.name ?? "",
       size: a.size,
       createdTime: a.createdTime,
       mimeType: a.mimeType,
       thumbnailLink: a.thumbnailLink,
+      ownerEmail: a.owners?.[0]?.emailAddress,
     }));
+    this.todasFotos = fotos;
+    this.fotos = filtrarOcultas(fotos, this.ocultas);
   }
 
   /** URL de objeto para <img>, cacheada y sin peticiones duplicadas. */
@@ -563,19 +629,27 @@ class EstadoAlbum {
     this.borrando = true;
     let ok = 0;
     const fallos: string[] = [];
+    const ocultar: string[] = [];
 
     for (const id of ids) {
       try {
-        await DriveApi.borrar(id);
-        ok++;
-        this.fotos = this.fotos.filter((f) => f.id !== id);
-        this.seleccion = this.seleccion.filter((s) => s !== id);
-        const url = this.#cache.get(id);
-        if (url) {
-          URL.revokeObjectURL(url);
-          this.#cache.delete(id);
+        ocultar.push(id);
+      } catch (e) {
+        // Solo el dueño de un archivo puede borrarlo en Drive. Las fotos que
+        // subió otra cuenta se ocultan del álbum en vez de fallar.
+        if ((e as ErrorHttp).code === 403) {
+          ocultar.push(id);
+          continue;
         }
-        if (this.fotoAbierta === id) this.fotoAbierta = null;
+        fallos.push(mensajeDe(e));
+      }
+    }
+
+    if (ocultar.length) {
+      try {
+        await this.#ocultar(ocultar);
+        for (const id of ocultar) this.#quitarFoto(id);
+        ok += ocultar.length;
       } catch (e) {
         fallos.push(mensajeDe(e));
       }
@@ -583,6 +657,84 @@ class EstadoAlbum {
 
     this.borrando = false;
     return { ok, fallos };
+  }
+
+  async restaurar(ids: string[]): Promise<void> {
+    const lista = quitarOcultas(this.ocultas, ids);
+    await this.guardarOcultas(lista);
+    this.ocultas = lista;
+    this.fotos = filtrarOcultas(this.todasFotos, lista);
+  }
+
+  esPropietario(id: string): boolean {
+    return this.todasFotos.find((foto) => foto.id === id)?.ownerEmail === this.yo;
+  }
+
+  async borrarDefinitivamente(ids: string[]): Promise<void> {
+    const propias = ids.filter((id) => this.papelera.some((foto) => foto.id === id));
+    for (const id of propias) await DriveApi.borrar(id);
+    const lista = quitarOcultas(this.ocultas, propias);
+    await this.guardarOcultas(lista);
+    this.ocultas = lista;
+    this.todasFotos = this.todasFotos.filter((foto) => !propias.includes(foto.id));
+    this.fotos = filtrarOcultas(this.todasFotos, lista);
+  }
+
+  async crearGrupo(nombre: string, ids: string[] = []): Promise<void> {
+    const limpio = nombre.trim().slice(0, 60);
+    if (!limpio || !CONFIG.memo.grupos) throw new Error("Escribe un nombre válido para el grupo.");
+    const grupo: Grupo = { id: crypto.randomUUID(), nombre: limpio, fotos: [...new Set(ids)] };
+    this.grupos = [...this.grupos, grupo];
+    await this.guardarGrupos();
+  }
+
+  async asignarAlGrupo(idGrupo: string, ids: string[]): Promise<void> {
+    const grupo = this.grupos.find((item) => item.id === idGrupo);
+    if (!grupo) return;
+    this.grupos = this.grupos.map((item) => (item.id === idGrupo ? agregarFotosAlGrupo(item, ids) : item));
+    await this.guardarGrupos();
+  }
+
+  async quitarDelGrupo(idGrupo: string, ids: string[]): Promise<void> {
+    const grupo = this.grupos.find((item) => item.id === idGrupo);
+    if (!grupo) return;
+    this.grupos = this.grupos.map((item) => (item.id === idGrupo ? quitarFotosDeGrupo(item, ids) : item));
+    await this.guardarGrupos();
+  }
+
+  async guardarOcultas(lista: string[]): Promise<void> {
+    if (!CONFIG.memo.ocultas) throw new Error("No se encontró ocultas.json del álbum.");
+    await DriveApi.actualizarJson(CONFIG.memo.ocultas, serializarOcultas(lista));
+  }
+
+  async guardarGrupos(): Promise<void> {
+    if (!CONFIG.memo.grupos) throw new Error("Este enlace no incluye grupos compartidos.");
+    await DriveApi.actualizarJson(CONFIG.memo.grupos, serializarGrupos(this.grupos));
+  }
+
+  /** Añade ids a ocultas.json y actualiza la lista en memoria. */
+  async #ocultar(ids: string[]): Promise<void> {
+    if (!CONFIG.memo.ocultas) {
+      throw new Error(
+        "No se pudo identificar la lista de fotos ocultas. Pide un enlace de invitación nuevo al administrador."
+      );
+    }
+
+    const lista = agregarOcultas(this.ocultas, ids);
+    await DriveApi.actualizarJson(CONFIG.memo.ocultas, serializarOcultas(lista));
+    this.ocultas = lista;
+  }
+
+  /** Quita una foto del estado local (galería, selección, visor y caché). */
+  #quitarFoto(id: string): void {
+    this.fotos = this.fotos.filter((f) => f.id !== id);
+    this.seleccion = this.seleccion.filter((s) => s !== id);
+    const url = this.#cache.get(id);
+    if (url) {
+      URL.revokeObjectURL(url);
+      this.#cache.delete(id);
+    }
+    if (this.fotoAbierta === id) this.fotoAbierta = null;
   }
 
   #quitarDeCola(id: number): void {

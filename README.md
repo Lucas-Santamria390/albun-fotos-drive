@@ -2,7 +2,7 @@
 
 Álbum de fotos colaborativo **sin backend**: el frontend estático habla directamente con la API
 REST de Google Drive usando OAuth 2.0. Cada dueño guarda su álbum en su propio Drive como
-`MiAlbumWeb_Config/{usuarios.json, invitaciones.json, album.json, fotos/}`. Cada persona puede
+`MiAlbumWeb_Config/{usuarios.json, invitaciones.json, album.json, ocultas.json, grupos.json, fotos/}`. Cada persona puede
 tener su álbum personal y, además, participar en los álbumes de otras cuentas.
 
 - Producción: <https://mialbumweb.netlify.app>
@@ -93,6 +93,11 @@ los enlaces antiguos siguen abriendo el álbum.
 - «Salir del álbum» elimina tu propia entrada de `usuarios.json`, borra la fila local y vuelve al
   hub. No cierra la sesión ni borra fotos. El administrador no puede salir de su propio álbum.
 - El nombre visible vive en `album.json` y lo edita el dueño desde ajustes.
+- El borrado desde la galería es siempre lógico: la foto se registra en `ocultas.json` y deja de
+  mostrarse. El propietario real de la foto la ve en «Fotos eliminadas» y puede restaurarla o
+  eliminarla definitivamente de Drive. Esto evita intentar borrar archivos propiedad de otra cuenta.
+- La galería permite filtrar por nombre, subidor, fechas y grupos. Los grupos virtuales se guardan en
+  `grupos.json` y se comparten con el álbum; no crean carpetas físicas ni duplican fotografías.
 
 ## Arquitectura
 
@@ -159,13 +164,14 @@ Limitaciones que se aceptan con este diseño:
 
 - La app no está verificada por Google: verás el aviso de «app no verificada» y hay un límite de
   usuarios. Publicarla para cualquiera exigiría verificación y evaluación de seguridad.
-- Los archivos se comparten como `anyone` con escritura (`fotos/`, `usuarios.json`) o lectura
-  (`invitaciones.json`, `album.json`) porque no hay backend que gestione permisos por email. El
-  token de invitación protege la app, no el acceso directo a Drive.
+- Los archivos se comparten como `anyone` con escritura (`fotos/`, `usuarios.json`, `ocultas.json`) o
+  lectura (`invitaciones.json`, `album.json`) porque no hay backend que gestione permisos por email.
+  El token de invitación protege la app, no el acceso directo a Drive.
 - El scope es amplio para todas las cuentas; la app solo usa la carpeta `MiAlbumWeb_Config`.
 - Las fotos que sube un invitado son suyas en Drive: consumen su cuota y desaparecen del álbum si
-  esa persona las borra desde su cuenta. El dueño puede quitarlas del álbum, pero Drive las manda a
-  la papelera del autor en lugar de borrarlas de forma permanente.
+  esa persona las borra desde su cuenta. Solo el dueño de un archivo puede borrarlo o mandarlo a la
+  papelera, así que el dueño del álbum no puede eliminar de Drive lo ajeno: al quitarlas se guarda
+  su id en `ocultas.json` y dejan de mostrarse en el álbum.
 - Un invitado puede modificar `usuarios.json` (está compartido con escritura) y, por tanto, editar
   los permisos de otras personas. Es inherente a compartir el archivo sin backend.
 - La lista de álbumes en los que participas vive en `localStorage` (`MiAlbumWeb_albumes`) y nunca
@@ -185,6 +191,7 @@ MiAlbumWeb_Config/
 ├── usuarios.json       # personas autorizadas + rol/permisos
 ├── invitaciones.json   # tokens de invitación activos
 ├── album.json          # nombre visible del álbum
+├── ocultas.json        # ids de fotos ocultas del álbum
 └── fotos/              # imágenes
 ```
 

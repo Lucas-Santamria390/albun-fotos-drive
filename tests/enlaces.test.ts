@@ -8,6 +8,7 @@ const memo: MemoEstructura = {
   users: "fUsers",
   fotos: "fFotos",
   album: "fAlbum",
+  ocultas: "fOcultas",
 };
 
 describe("enlaceInvitacion", () => {
@@ -48,13 +49,19 @@ describe("enlaceInvitacion", () => {
     expect(enlace).toContain("album=fAlbum");
   });
 
-  it("omite album cuando el memo no lo tiene (enlaces antiguos)", () => {
+  it("incluye el id de ocultas.json cuando existe", () => {
+    const enlace = enlaceInvitacion("tok", memo, "https://album.example");
+    expect(enlace).toContain("ocultas=fOcultas");
+  });
+
+  it("omite album y ocultas cuando el memo no los tiene (enlaces antiguos)", () => {
     const enlace = enlaceInvitacion(
       "tok",
       { raiz: "a", inv: "b", users: "c", fotos: "d", album: "" },
       "https://album.example"
     );
     expect(enlace).not.toContain("album=");
+    expect(enlace).not.toContain("ocultas=");
   });
 
   it("codifica el token exactamente una vez", () => {

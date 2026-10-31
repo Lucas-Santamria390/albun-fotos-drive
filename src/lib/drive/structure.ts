@@ -54,13 +54,15 @@ async function asegurarAlbumJson(raiz: ArchivoDrive, dueno?: string): Promise<Ar
 
 /**
  * Garantiza la estructura del álbum en el Drive del dueño:
- * MiAlbumWeb_Config/{invitaciones.json, usuarios.json, album.json, fotos/}
+ * MiAlbumWeb_Config/{invitaciones.json, usuarios.json, album.json, ocultas.json, fotos/}
  */
 export async function asegurarEstructura(dueno?: string): Promise<MemoEstructura> {
   const raiz = await buscarCarpeta(CONFIG.rootNombre, "root");
   const inv = await pedirJsonCarpeta("invitaciones.json", raiz);
   const users = await pedirJsonCarpeta("usuarios.json", raiz);
   const album = await asegurarAlbumJson(raiz, dueno);
+  const ocultas = await pedirJsonCarpeta("ocultas.json", raiz);
+  const grupos = await pedirJsonCarpeta("grupos.json", raiz);
   const fotos = await buscarCarpeta("fotos", raiz.id);
 
   CONFIG.memo = {
@@ -69,6 +71,8 @@ export async function asegurarEstructura(dueno?: string): Promise<MemoEstructura
     users: users.id,
     fotos: fotos.id,
     album: album.id,
+    ocultas: ocultas.id,
+    grupos: grupos.id,
   };
   return CONFIG.memo;
 }
@@ -87,6 +91,8 @@ export async function compartirAlbum(): Promise<void> {
     { id: CONFIG.memo.users, rol: "writer" as const, nombre: "usuarios.json" },
     { id: CONFIG.memo.inv, rol: "reader" as const, nombre: "invitaciones.json" },
     { id: CONFIG.memo.album, rol: "reader" as const, nombre: "album.json" },
+    { id: CONFIG.memo.ocultas, rol: "writer" as const, nombre: "ocultas.json" },
+    { id: CONFIG.memo.grupos, rol: "writer" as const, nombre: "grupos.json" },
     { id: CONFIG.memo.fotos, rol: "writer" as const, nombre: "fotos/" },
   ];
 

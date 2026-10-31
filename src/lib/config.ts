@@ -50,5 +50,5 @@ export const CONFIG = {
   apiBase: "https://www.googleapis.com/drive/v3",
   uploadBase: "https://www.googleapis.com/upload/drive/v3",
   /** Se rellena con asegurarEstructura() o con los parámetros del enlace. */
-  memo: { raiz: "", inv: "", users: "", fotos: "", album: "" } as MemoEstructura,
+  memo: { raiz: "", inv: "", users: "", fotos: "", album: "", ocultas: "", grupos: "" } as MemoEstructura,
 };

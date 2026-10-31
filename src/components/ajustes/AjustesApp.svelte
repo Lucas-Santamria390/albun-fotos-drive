@@ -3,15 +3,12 @@
   import { album } from "../../lib/stores/album.svelte";
   import { toastError, toastOk } from "../../lib/stores/toast.svelte";
   import { qrDataUrl } from "../../lib/qr";
-  import { PERMISOS_INICIALES, PERMISOS_VISITANTE } from "../../lib/services/permisos";
   import { inicial } from "../../lib/services/texto";
   import type { Rol } from "../../lib/tipos";
   import InterruptorTema from "../ui/InterruptorTema.svelte";
+  import Modal from "../ui/Modal.svelte";
 
   let rol = $state<Rol>("colaborador");
-  let subir = $state(true);
-  let borrar = $state(false);
-  let modificar = $state(false);
   let expiracion = $state("");
   let generando = $state(false);
   let copiado = $state(false);
@@ -19,6 +16,8 @@
   let nombreInput = $state("");
   let guardandoNombre = $state(false);
   let nombreCargado = $state(false);
+  let confirmarSalida = $state(false);
+  let saliendo = $state(false);
 
   // album.json llega de Drive después del montaje: se copia una sola vez.
   $effect(() => {
@@ -27,7 +26,6 @@
     nombreCargado = true;
   });
 
-  const visitante = $derived(rol === "visitante");
   const qr = $derived(album.enlaceActual ? qrDataUrl(album.enlaceActual) : "");
 
   const usuarios = $derived(Object.entries(album.usuarios).sort(([a], [b]) => a.localeCompare(b)));
@@ -37,25 +35,13 @@
     void album.iniciar();
   });
 
-  function cambiarRol(): void {
-    if (visitante) {
-      subir = PERMISOS_VISITANTE.subir;
-      borrar = PERMISOS_VISITANTE.borrar;
-      modificar = PERMISOS_VISITANTE.modificar;
-      return;
-    }
-    subir = PERMISOS_INICIALES.subir;
-    borrar = PERMISOS_INICIALES.borrar;
-    modificar = PERMISOS_INICIALES.modificar;
-  }
-
   async function generar(): Promise<void> {
     generando = true;
     copiado = false;
     try {
       await album.crearInvitacion({
         rol,
-        permisos: { subir, borrar, modificar },
+        permisos: { subir: rol !== "visitante", borrar: rol !== "visitante", modificar: false },
         expiracion: expiracion.trim() || "indefinida",
       });
       toastOk("Invitación generada.");
@@ -108,14 +94,20 @@
     } finally {
       guardandoNombre = false;
     }
+
   }
 
-  const permisosTexto = (p: { subir?: boolean; borrar?: boolean; modificar?: boolean }): string => {
-    const activos = [p.subir && "subir", p.borrar && "borrar", p.modificar && "modificar"].filter(
-      Boolean,
-    );
-    return activos.length ? activos.join(" · ") : "solo lectura";
-  };
+  async function salirDelAlbum(): Promise<void> {
+    saliendo = true;
+    try {
+      await album.salirDelAlbum();
+    } catch (e) {
+      toastError(e instanceof Error ? e.message : "No se pudo salir del álbum.");
+      saliendo = false;
+      confirmarSalida = false;
+    }
+  }
+
 </script>
 
 <div class="flex min-h-dvh flex-col">
@@ -148,12 +140,14 @@
   {:else if album.fase === "listo" && !album.esOwner}
     <main class="grid flex-1 place-items-center px-4 py-16">
       <div class="tarjeta max-w-md p-6 text-center sm:p-8">
-        <h1 class="text-xl font-extrabold tracking-tight">Solo para el administrador</h1>
+        <h1 class="text-xl font-extrabold tracking-tight">Ajustes del álbum</h1>
         <p class="mt-2 text-sm text-suave">
-          Esta página gestiona los accesos del álbum. Pide al administrador que te comparta el enlace
-          si necesitas entrar a la galería.
+          Aquí puedes gestionar tu vínculo con este álbum.
         </p>
-        <a href="/album.html" class="btn btn-prim mt-5">Ir a mi álbum</a>
+        <button type="button" class="btn btn-peligro mt-5" onclick={() => (confirmarSalida = true)}>
+          Salir del álbum
+        </button>
+        <a href={`/album.html${typeof window !== "undefined" ? window.location.search : ""}`} class="btn btn-ghost mt-2">Volver al álbum</a>
       </div>
     </main>
   {:else if album.fase === "listo"}
@@ -243,7 +237,8 @@
       <section class="tarjeta mb-8 p-5 sm:p-6" aria-labelledby="titulo-invitar">
         <h2 id="titulo-invitar" class="text-lg font-bold">Crear una invitación</h2>
         <p class="mt-1 text-sm text-suave">
-          Elige qué podrá hacer la persona invitada. El enlace y el QR se generan aquí mismo.
+          Las personas colaboradoras pueden subir y ocultar fotos. Cada propietario gestiona sus fotos
+          desde la papelera. El enlace y el QR se generan aquí mismo.
         </p>
 
         <form
@@ -259,7 +254,6 @@
               id="rol-inv"
               class="campo"
               bind:value={rol}
-              onchange={cambiarRol}
             >
               <option value="colaborador">Colaborador</option>
               <option value="visitante">Visitante</option>
@@ -273,28 +267,10 @@
             <p class="text-xs text-suave">Déjalo vacío para una invitación sin caducidad.</p>
           </div>
 
-          <fieldset class="sm:col-span-2" disabled={visitante}>
-            <legend class="mb-2 text-xs font-semibold text-suave">Permisos</legend>
-            <div class="flex flex-wrap gap-4">
-              <label class="flex items-center gap-2 text-sm">
-                <input type="checkbox" class="h-4 w-4 accent-primario" bind:checked={subir} disabled={visitante} />
-                Subir fotos
-              </label>
-              <label class="flex items-center gap-2 text-sm">
-                <input type="checkbox" class="h-4 w-4 accent-primario" bind:checked={borrar} disabled={visitante} />
-                Borrar fotos
-              </label>
-              <label class="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  class="h-4 w-4 accent-primario"
-                  bind:checked={modificar}
-                  disabled={visitante}
-                />
-                Modificar
-              </label>
-            </div>
-          </fieldset>
+          <p class="sm:col-span-2 rounded-md bg-superficie-2 p-3 text-sm text-suave">
+            Regla fija: cada usuario controla únicamente las fotos que subió; las fotos eliminadas
+            por terceros pasan a la papelera de su propietario.
+          </p>
 
           <div class="sm:col-span-2">
             <button type="submit" class="btn btn-prim" disabled={generando}>
@@ -352,7 +328,7 @@
       <!-- Usuarios -->
       <section class="tarjeta mb-8 p-5 sm:p-6" aria-labelledby="titulo-usuarios">
         <h2 id="titulo-usuarios" class="text-lg font-bold">Personas con acceso</h2>
-        <p class="mt-1 text-sm text-suave">El administrador siempre tiene acceso total.</p>
+        <p class="mt-1 text-sm text-suave">Los permisos individuales fueron sustituidos por reglas de propiedad.</p>
 
         {#if !usuarios.length}
           <p class="vacio text-sm">Todavía no hay otras personas en el álbum.</p>
@@ -377,7 +353,6 @@
                   class:bg-aviso-suave={usuario.rol === "visitante"}
                   class:text-aviso={usuario.rol === "visitante"}>{usuario.rol}</span
                 >
-                <span class="hidden text-xs text-suave sm:inline">{permisosTexto(usuario.permisos)}</span>
 
                 {#if usuario.rol !== "admin"}
                   <button
@@ -409,7 +384,7 @@
                 <div class="min-w-0 flex-1">
                   <p class="truncate font-mono text-xs text-suave">{token}</p>
                   <p class="mt-1 text-xs text-suave">
-                    Caduca: {inv.expiracion || "nunca"} · {permisosTexto(inv.permisos)}
+                    Caduca: {inv.expiracion || "nunca"} · reglas de propiedad
                   </p>
                 </div>
                 <span
@@ -444,3 +419,18 @@
     </main>
   {/if}
 </div>
+
+<Modal
+  abierto={confirmarSalida}
+  titulo="Salir del álbum"
+  descripcion="Dejarás de tener acceso a este álbum. Tus fotos no se borrarán."
+  cerrable={!saliendo}
+  onCerrar={() => (confirmarSalida = false)}
+>
+  {#snippet acciones()}
+    <button type="button" class="btn btn-sec" disabled={saliendo} onclick={() => (confirmarSalida = false)}>Cancelar</button>
+    <button type="button" class="btn btn-peligro" disabled={saliendo} onclick={salirDelAlbum}>
+      {saliendo ? "Saliendo…" : "Confirmar salida"}
+    </button>
+  {/snippet}
+</Modal>

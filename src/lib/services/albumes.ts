@@ -11,6 +11,8 @@ export interface DatosEnlace {
   users: string;
   fotos: string;
   album?: string;
+  ocultas?: string;
+  grupos?: string;
 }
 
 const ROLES: Rol[] = ["admin", "colaborador", "visitante"];
@@ -55,6 +57,8 @@ export function leerAlbumes(crudo: string | null | undefined): AlbumGuardado[] {
       users,
       fotos,
       album: texto(entrada?.album) || undefined,
+      ocultas: texto(entrada?.ocultas) || undefined,
+      grupos: texto(entrada?.grupos) || undefined,
       nombre: texto(entrada?.nombre) || NOMBRE_RESPALDO,
       rol: rolValido(entrada?.rol),
       unido: texto(entrada?.unido),
@@ -104,6 +108,8 @@ export function enlaceAlbum(datos: DatosEnlace, base: string): string {
   url.searchParams.set("users", datos.users);
   url.searchParams.set("fotos", datos.fotos);
   if (datos.album) url.searchParams.set("album", datos.album);
+  if (datos.ocultas) url.searchParams.set("ocultas", datos.ocultas);
+  if (datos.grupos) url.searchParams.set("grupos", datos.grupos);
   return url.toString();
 }
 
@@ -139,6 +145,10 @@ export function parsearEnlace(crudo: string): DatosEnlace | null {
   const datos: DatosEnlace = { drive, inv, users, fotos };
   const album = texto(params.get("album"));
   if (album) datos.album = album;
+  const ocultas = texto(params.get("ocultas"));
+  if (ocultas) datos.ocultas = ocultas;
+  const grupos = texto(params.get("grupos"));
+  if (grupos) datos.grupos = grupos;
   return datos;
 }
 

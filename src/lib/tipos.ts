@@ -28,6 +28,7 @@ export type Invitaciones = Record<string, Invitacion>;
 export interface Foto {
   id: string;
   name: string;
+  ownerEmail?: string;
   size?: string;
   createdTime?: string;
   mimeType?: string;
@@ -42,6 +43,7 @@ export interface ArchivoDrive {
   createdTime?: string;
   size?: string;
   thumbnailLink?: string;
+  owners?: Array<{ emailAddress?: string }>;
 }
 
 export interface MemoEstructura {
@@ -51,6 +53,16 @@ export interface MemoEstructura {
   fotos: string;
   /** id de album.json (vacío en enlaces anteriores a este archivo). */
   album: string;
+  /** id de ocultas.json (vacío en enlaces anteriores a este archivo). */
+  ocultas?: string;
+  /** id de grupos.json (vacío en enlaces anteriores). */
+  grupos?: string;
+}
+
+export interface Grupo {
+  id: string;
+  nombre: string;
+  fotos: string[];
 }
 
 /** Contenido de album.json: nombre visible del álbum. */
@@ -67,6 +79,9 @@ export interface AlbumGuardado {
   users: string;
   fotos: string;
   album?: string;
+  /** id de ocultas.json (vacío en enlaces anteriores a este archivo). */
+  ocultas?: string;
+  grupos?: string;
   nombre: string;
   rol: Rol;
   /** Fecha ISO en la que se unió a este álbum. */

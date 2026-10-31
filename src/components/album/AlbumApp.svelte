@@ -13,13 +13,15 @@
   import ConfirmarBorrado from "./ConfirmarBorrado.svelte";
   import ModalNombre from "./ModalNombre.svelte";
   import Lightbox from "./Lightbox.svelte";
+  import Papelera from "./Papelera.svelte";
 
   let cargando = $state(false);
   let idsPendientes = $state<string[]>([]);
-  let porSalirAlbum = $state(false);
-  let saliendoDelAlbum = $state(false);
+  let papeleraAbierta = $state(false);
+  let rutaAlbum = $state("");
 
   onMount(() => {
+    rutaAlbum = window.location.search;
     void album.iniciar();
     return () => album.limpiarCache();
   });
@@ -50,11 +52,11 @@
 
     if (resultados.ok > 0) {
       toastOk(
-        resultados.ok === 1 ? "Foto eliminada." : `${resultados.ok} fotos eliminadas.`,
+        resultados.ok === 1 ? "Foto quitada del álbum." : `${resultados.ok} fotos quitadas del álbum.`,
       );
     }
     if (resultados.fallos.length) {
-      toastError(`No se pudieron eliminar ${resultados.fallos.length} foto(s).`);
+      toastError(`No se pudieron quitar ${resultados.fallos.length} foto(s).`);
     }
     if (album.seleccionActiva) album.cancelarSeleccion();
   }
@@ -62,18 +64,6 @@
   async function registrarNombre(nombre: string): Promise<void> {
     await album.registrarNombre(nombre);
     toastOk("¡Ya estás dentro!");
-  }
-
-  async function confirmarSalirDelAlbum(): Promise<void> {
-    saliendoDelAlbum = true;
-    try {
-      // Si sale bien, el store redirige a "Mis álbumes".
-      await album.salirDelAlbum();
-    } catch (e) {
-      toastError(e instanceof Error ? e.message : "No se pudo salir del álbum.");
-      saliendoDelAlbum = false;
-      porSalirAlbum = false;
-    }
   }
 
   function quitarDeMiLista(): void {
@@ -164,7 +154,7 @@
   {#if album.fase === "listo"}
     <header class="sticky top-0 z-40 border-b border-borde bg-fondo/85 backdrop-blur-md">
       <div class="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
-        <a href="/" class="flex items-center gap-2.5 rounded-md no-underline" aria-label="MiAlbumWeb, inicio">
+        <a href="/albumes.html" class="flex items-center gap-2.5 rounded-md no-underline" aria-label="MiAlbumWeb, Mis álbumes">
           <span
             class="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-primario to-primario-2 text-white shadow-sm"
             aria-hidden="true"
@@ -217,8 +207,25 @@
 
           <InterruptorTema />
 
-          {#if album.esOwner}
-            <a href="/ajustes.html" class="btn btn-ghost btn-sm" title="Ajustes del álbum">
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm relative"
+            title="Abrir papelera"
+            aria-label={`Abrir papelera${album.papelera.length ? `, ${album.papelera.length} fotos` : ""}`}
+            onclick={() => (papeleraAbierta = true)}
+          >
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            {#if album.papelera.length}
+              <span class="absolute -top-1 -right-1 grid min-h-4 min-w-4 place-items-center rounded-full bg-peligro px-1 text-[0.6rem] font-bold text-white">
+                {album.papelera.length}
+              </span>
+            {/if}
+          </button>
+
+          {#if album.esOwner || album.modo === "inv"}
+            <a href={album.esOwner ? "/ajustes.html" : `/ajustes.html${rutaAlbum}`} class="btn btn-ghost btn-sm" title="Ajustes del álbum">
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="12" cy="12" r="3"></circle>
                 <path
@@ -239,21 +246,6 @@
             </svg>
             <span class="hidden md:inline">Mis álbumes</span>
           </a>
-
-          {#if !album.esOwner && album.rol !== "admin"}
-            <button
-              type="button"
-              class="btn btn-ghost btn-sm text-peligro"
-              title="Salir del álbum"
-              aria-label="Salir del álbum"
-              onclick={() => (porSalirAlbum = true)}
-            >
-              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
-              <span class="hidden md:inline">Salir del álbum</span>
-            </button>
-          {/if}
 
           <button type="button" class="btn btn-sec btn-sm" onclick={() => album.salir()}>
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -280,36 +272,6 @@
       onConfirmar={confirmarBorrado}
     />
     <Lightbox />
-
-    <Modal
-      abierto={porSalirAlbum}
-      titulo="Salir del álbum"
-      descripcion="Vas a dejar de tener acceso a este álbum. Para volver necesitarás un enlace de invitación."
-      cerrable={!saliendoDelAlbum}
-      onCerrar={() => (porSalirAlbum = false)}
-    >
-      {#snippet children()}
-        <p class="text-sm font-semibold">{album.nombre}</p>
-      {/snippet}
-
-      {#snippet acciones()}
-        <button
-          type="button"
-          class="btn btn-sec"
-          disabled={saliendoDelAlbum}
-          onclick={() => (porSalirAlbum = false)}
-        >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          class="btn btn-peligro"
-          disabled={saliendoDelAlbum}
-          onclick={confirmarSalirDelAlbum}
-        >
-          {saliendoDelAlbum ? "Saliendo…" : "Salir del álbum"}
-        </button>
-      {/snippet}
-    </Modal>
+    <Papelera abierto={papeleraAbierta} onCerrar={() => (papeleraAbierta = false)} />
   {/if}
 </div>

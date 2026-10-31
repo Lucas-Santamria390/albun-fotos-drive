@@ -1,5 +1,6 @@
 <script lang="ts">
   import { album } from "../../lib/stores/album.svelte";
+  import { toastError, toastOk } from "../../lib/stores/toast.svelte";
   import { estiloConteo } from "../../lib/services/galeria";
   import FotoCard from "./FotoCard.svelte";
 
@@ -12,11 +13,35 @@
   const { onBorrar, onRecargar, cargando = false }: Props = $props();
 
   const conteo = $derived(estiloConteo(album.total, album.visibles.length));
+  let nuevoGrupo = $state("");
+
+  async function crearGrupo(): Promise<void> {
+    const nombre = nuevoGrupo.trim();
+    if (!nombre) return;
+    try {
+      await album.crearGrupo(nombre);
+      nuevoGrupo = "";
+      toastOk("Grupo creado.");
+    } catch (e) {
+      toastError(e instanceof Error ? e.message : "No se pudo crear el grupo.");
+    }
+  }
+
+  async function asignarSeleccion(): Promise<void> {
+    if (!album.grupoActivo) return;
+    try {
+      await album.asignarAlGrupo(album.grupoActivo, album.seleccion);
+      album.cancelarSeleccion();
+      toastOk("Fotos añadidas al grupo.");
+    } catch (e) {
+      toastError(e instanceof Error ? e.message : "No se pudieron asignar las fotos.");
+    }
+  }
 </script>
 
 <section class="pb-24" aria-label="Galería de fotos">
-  <div class="mb-4 flex flex-wrap items-center gap-2">
-    <div class="relative min-w-[10rem] flex-1">
+  <div class="mb-4 -mx-1 flex flex-nowrap items-center gap-2 overflow-x-auto px-1 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+    <div class="relative min-w-[13rem] flex-1 sm:min-w-[10rem]">
       <svg
         class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-suave"
         viewBox="0 0 24 24"
@@ -38,11 +63,39 @@
       />
     </div>
 
-    <select class="campo w-auto" aria-label="Ordenar fotos" bind:value={album.orden}>
+    <select class="campo w-auto shrink-0" aria-label="Ordenar fotos" bind:value={album.orden}>
       <option value="recientes">Más recientes</option>
       <option value="antiguos">Más antiguas</option>
       <option value="nombre">Orden alfabético</option>
     </select>
+
+    <select class="campo w-auto shrink-0" aria-label="Filtrar por grupo" bind:value={album.grupoActivo}>
+      <option value="">Todas las fotos</option>
+      {#each album.grupos as grupo (grupo.id)}
+        <option value={grupo.id}>{grupo.nombre}</option>
+      {/each}
+    </select>
+
+    <select class="campo w-auto shrink-0" aria-label="Filtrar por persona que subió la foto" bind:value={album.subidorActivo}>
+      <option value="">Cualquier subidor</option>
+      {#each [...new Set(album.fotos.map((foto) => foto.ownerEmail).filter(Boolean))] as email}
+        <option value={email}>{email}</option>
+      {/each}
+    </select>
+
+    <label class="flex shrink-0 items-center gap-1 text-xs text-suave">
+      Desde
+      <input class="campo w-32" type="date" aria-label="Fecha inicial" bind:value={album.fechaDesde} />
+    </label>
+    <label class="flex shrink-0 items-center gap-1 text-xs text-suave">
+      Hasta
+      <input class="campo w-32" type="date" aria-label="Fecha final" bind:value={album.fechaHasta} />
+    </label>
+
+    <form class="flex shrink-0 gap-1" onsubmit={(e) => { e.preventDefault(); void crearGrupo(); }}>
+      <input class="campo w-32" aria-label="Nombre del nuevo grupo" placeholder="Nuevo grupo" bind:value={nuevoGrupo} />
+      <button type="submit" class="btn btn-sec btn-sm" disabled={!nuevoGrupo.trim()}>Crear</button>
+    </form>
 
     {#if album.puedeBorrar && album.total > 0}
       <button
@@ -57,6 +110,12 @@
           <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"></path>
         </svg>
         <span class="hidden sm:inline">Seleccionar</span>
+      </button>
+    {/if}
+
+    {#if album.seleccionadas > 0 && album.grupoActivo}
+      <button type="button" class="btn btn-sec btn-sm" onclick={() => void asignarSeleccion()}>
+        Añadir al grupo
       </button>
     {/if}
 
@@ -113,7 +172,7 @@
       </button>
     </div>
   {:else}
-    <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <ul class="grid grid-cols-2 gap-2.5 sm:gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {#each album.visibles as foto (foto.id)}
         <FotoCard {foto} {onBorrar} />
       {/each}

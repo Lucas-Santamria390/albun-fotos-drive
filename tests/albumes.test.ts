@@ -18,6 +18,7 @@ const base: AlbumGuardado = {
   users: "fUsers",
   fotos: "fFotos",
   album: "fAlbum",
+  ocultas: "fOcultas",
   nombre: "Álbum de Ana",
   rol: "colaborador",
   unido: "2026-10-01T10:00:00.000Z",
@@ -116,12 +117,18 @@ describe("enlaceAlbum", () => {
     expect(url.searchParams.get("drive")).toBe("fRaiz");
     expect(url.searchParams.get("fotos")).toBe("fFotos");
     expect(url.searchParams.get("album")).toBe("fAlbum");
+    expect(url.searchParams.get("ocultas")).toBe("fOcultas");
     expect(url.searchParams.has("token")).toBe(false);
   });
 
   it("omite el parámetro album si el enlace es antiguo", () => {
     const enlace = enlaceAlbum({ ...base, album: undefined }, "https://album.example");
     expect(enlace).not.toContain("album=");
+  });
+
+  it("omite el parámetro ocultas si el enlace es antiguo", () => {
+    const enlace = enlaceAlbum({ ...base, ocultas: undefined }, "https://album.example");
+    expect(enlace).not.toContain("ocultas=");
   });
 
   it("rechaza un origen inválido en lugar de inventarlo", () => {
@@ -139,6 +146,7 @@ describe("parsearEnlace", () => {
       users: "fUsers",
       fotos: "fFotos",
       album: "fAlbum",
+      ocultas: "fOcultas",
     });
   });
 
@@ -148,6 +156,16 @@ describe("parsearEnlace", () => {
       inv: "b",
       users: "c",
       fotos: "d",
+    });
+  });
+
+  it("lee ocultas cuando el enlace lo incluye", () => {
+    expect(parsearEnlace("drive=a&inv=b&users=c&fotos=d&ocultas=e")).toEqual({
+      drive: "a",
+      inv: "b",
+      users: "c",
+      fotos: "d",
+      ocultas: "e",
     });
   });
 

@@ -20,5 +20,7 @@ export function enlaceInvitacion(token: string, memo: MemoEstructura, base: stri
   url.searchParams.set("fotos", memo.fotos);
   // Opcional: los enlaces emitidos antes de album.json siguen siendo válidos.
   if (memo.album) url.searchParams.set("album", memo.album);
+  if (memo.ocultas) url.searchParams.set("ocultas", memo.ocultas);
+  if (memo.grupos) url.searchParams.set("grupos", memo.grupos);
   return url.toString();
 }

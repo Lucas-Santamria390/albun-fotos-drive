@@ -16,8 +16,8 @@
   );
   const detalle = $derived(
     ids.length === 1
-      ? "La foto se eliminará del álbum para siempre. Esta acción no se puede deshacer."
-      : "Las fotos se eliminarán del álbum para siempre. Esta acción no se puede deshacer.",
+      ? "Esta foto se ocultará del álbum principal, pero el propietario aún podrá verla en su papelera para restaurarla o eliminarla definitivamente."
+      : "Estas fotos se ocultarán del álbum principal. Cada propietario podrá ver sus fotos en la papelera para restaurarlas o eliminarlas definitivamente.",
   );
 </script>
 
