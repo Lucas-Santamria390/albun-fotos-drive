@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { qrSvg, qrDataUrl } from "../src/lib/qr";
 
-const enlace = "https://mialbumweb.netlify.app/album.html?token=alb-test";
+const enlace = "http://localhost:4321/album.html?token=alb-test";
 
 describe("qr local", () => {
   it("genera un SVG válido", () => {

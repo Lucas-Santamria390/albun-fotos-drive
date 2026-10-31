@@ -1,0 +1,14 @@
+---
+import Base from "../layouts/Base.astro";
+import MisAlbumes from "../components/albumes/MisAlbumes.svelte";
+---
+
+<Base
+  titulo="Mis álbumes"
+  descripcion="Tu álbum personal y los álbumes en los que participas."
+  noindex
+  cabecera={false}
+  pie={false}
+>
+  <MisAlbumes client:load />
+</Base>

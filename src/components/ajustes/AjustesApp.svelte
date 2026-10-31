@@ -16,6 +16,16 @@
   let generando = $state(false);
   let copiado = $state(false);
   let revocando = $state<string | null>(null);
+  let nombreInput = $state("");
+  let guardandoNombre = $state(false);
+  let nombreCargado = $state(false);
+
+  // album.json llega de Drive después del montaje: se copia una sola vez.
+  $effect(() => {
+    if (nombreCargado || !album.info) return;
+    nombreInput = album.info.nombre;
+    nombreCargado = true;
+  });
 
   const visitante = $derived(rol === "visitante");
   const qr = $derived(album.enlaceActual ? qrDataUrl(album.enlaceActual) : "");
@@ -82,9 +92,21 @@
   async function quitarUsuario(email: string): Promise<void> {
     try {
       await album.eliminarUsuario(email);
-      toastOk("Acceso retirado.");
+      toastOk("Acceso retirado. La persona perderá el álbum de su lista al abrirlo.");
     } catch (e) {
       toastError(e instanceof Error ? e.message : "No se pudo retirar el acceso.");
+    }
+  }
+
+  async function guardarNombre(): Promise<void> {
+    guardandoNombre = true;
+    try {
+      await album.renombrarAlbum(nombreInput);
+      toastOk("Nombre del álbum actualizado.");
+    } catch (e) {
+      toastError(e instanceof Error ? e.message : "No se pudo guardar el nombre.");
+    } finally {
+      guardandoNombre = false;
     }
   }
 
@@ -153,7 +175,10 @@
             <span class="text-xs font-semibold text-texto">{album.yoNombre}</span>
           </span>
           <InterruptorTema />
-          <button type="button" class="btn btn-sec btn-sm" onclick={() => album.salir()}>Salir</button>
+          <a href="/albumes.html" class="btn btn-ghost btn-sm">Mis álbumes</a>
+          <button type="button" class="btn btn-sec btn-sm" onclick={() => album.salir()}>
+            Cerrar sesión
+          </button>
         </div>
       </div>
     </header>
@@ -180,6 +205,38 @@
           <p class="text-xs font-bold tracking-wider text-suave uppercase">Invitaciones</p>
           <p class="mt-1 text-3xl font-extrabold">{invitaciones.length}</p>
         </div>
+      </section>
+
+      <!-- Nombre del álbum -->
+      <section class="tarjeta mb-8 p-5 sm:p-6" aria-labelledby="titulo-nombre">
+        <h2 id="titulo-nombre" class="text-lg font-bold">Nombre del álbum</h2>
+        <p class="mt-1 text-sm text-suave">
+          Es el nombre que ven las personas invitadas en «Mis álbumes».
+        </p>
+        <form
+          class="mt-4 flex flex-col gap-2 sm:flex-row"
+          onsubmit={(e) => {
+            e.preventDefault();
+            void guardarNombre();
+          }}
+        >
+          <label class="sr-only" for="nombre-album">Nombre del álbum</label>
+          <input
+            id="nombre-album"
+            class="campo"
+            type="text"
+            maxlength="60"
+            placeholder="Mi álbum"
+            bind:value={nombreInput}
+          />
+          <button
+            type="submit"
+            class="btn btn-prim shrink-0"
+            disabled={guardandoNombre || !nombreInput.trim()}
+          >
+            {guardandoNombre ? "Guardando…" : "Guardar"}
+          </button>
+        </form>
       </section>
 
       <!-- Generador de invitaciones -->
@@ -245,6 +302,18 @@
             </button>
           </div>
         </form>
+
+        {#if album.avisoCompartir}
+          <div class="mt-4 rounded-md border border-peligro/40 bg-peligro-suave p-4" role="alert">
+            <p class="text-sm font-semibold text-peligro">
+              No se pudo habilitar el acceso público del álbum
+            </p>
+            <p class="mt-1 text-xs text-suave">{album.avisoCompartir}</p>
+            <p class="mt-1 text-xs text-suave">
+              El enlace puede no funcionar para otras cuentas hasta que se corrija.
+            </p>
+          </div>
+        {/if}
 
         {#if album.enlaceActual}
           <div class="anim-subir mt-6 grid gap-4 rounded-md border border-borde bg-superficie-2/50 p-4 sm:grid-cols-[auto_1fr]">

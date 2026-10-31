@@ -23,8 +23,9 @@ const {
 } = Astro.props;
 
 const tituloCompleto = titulo.includes("MiAlbumWeb") ? titulo : `${titulo} — MiAlbumWeb`;
-const canonica = new URL(Astro.url.pathname, Astro.site ?? "https://mialbumweb.netlify.app");
-const ogImagen = new URL("/og.svg", Astro.site ?? "https://mialbumweb.netlify.app");
+// Sin `PUBLIC_SITE_URL` no se inventa un dominio: se omiten canonical y OG.
+const canonica = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null;
+const ogImagen = Astro.site ? new URL("/og.svg", Astro.site) : null;
 ---
 
 <!doctype html>
@@ -34,7 +35,7 @@ const ogImagen = new URL("/og.svg", Astro.site ?? "https://mialbumweb.netlify.ap
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{tituloCompleto}</title>
     <meta name="description" content={descripcion} />
-    <link rel="canonical" href={canonica.href} />
+    {canonica && <link rel="canonical" href={canonica.href} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <meta name="theme-color" content="#6366f1" />
@@ -45,12 +46,12 @@ const ogImagen = new URL("/og.svg", Astro.site ?? "https://mialbumweb.netlify.ap
     <meta property="og:locale" content="es_ES" />
     <meta property="og:title" content={tituloCompleto} />
     <meta property="og:description" content={descripcion} />
-    <meta property="og:url" content={canonica.href} />
-    <meta property="og:image" content={ogImagen.href} />
+    {canonica && <meta property="og:url" content={canonica.href} />}
+    {ogImagen && <meta property="og:image" content={ogImagen.href} />}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={tituloCompleto} />
     <meta name="twitter:description" content={descripcion} />
-    <meta name="twitter:image" content={ogImagen.href} />
+    {ogImagen && <meta name="twitter:image" content={ogImagen.href} />}
 
     <!-- Aplica el tema antes del primer pintado para evitar el destello. -->
     <script is:inline>

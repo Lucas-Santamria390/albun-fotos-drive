@@ -1,5 +1,6 @@
 <script lang="ts">
   import { AUTH } from "../../lib/auth";
+  import { SCOPE } from "../../lib/config";
   import { toastError } from "../../lib/stores/toast.svelte";
 
   interface Props {
@@ -12,7 +13,7 @@
   const {
     variante = "prim",
     texto = "Iniciar sesión",
-    destino = "/album.html",
+    destino = "/albumes.html",
     class: claseExtra = "",
   } = $props();
 
@@ -23,8 +24,11 @@
     cargando = true;
     try {
       AUTH.init();
-      await AUTH.login();
-      window.location.href = destino;
+      await AUTH.login(SCOPE);
+
+      // Si se llegó con un enlace de invitación en la URL, se conserva.
+      const buscar = window.location.search;
+      window.location.href = buscar ? destino + buscar : destino;
     } catch (e) {
       toastError(e instanceof Error ? e.message : "No se pudo iniciar sesión");
     } finally {

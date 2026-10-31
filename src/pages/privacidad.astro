@@ -3,7 +3,7 @@ import Base from "../layouts/Base.astro";
 import Contenedor from "../components/layout/Contenedor.astro";
 import Prosa from "../components/ui/Prosa.astro";
 
-const actualizado = "28 de octubre de 2026";
+const actualizado = "30 de octubre de 2026";
 ---
 
 <Base
@@ -43,9 +43,22 @@ const actualizado = "28 de octubre de 2026";
           </li>
         </ul>
         <p>
-          Los permisos solicitados se limitan exclusivamente a <code>drive.file</code>: acceso solo a
-          los archivos que la propia aplicación crea. La aplicación no puede ver ni modificar el resto
-          de tu Drive.
+          La aplicación pide permiso de Google Drive
+          (<code>https://www.googleapis.com/auth/drive</code>) a todas las cuentas. Es necesario para
+          que el dueño del álbum pueda ver y gestionar las fotos que suben las personas invitadas, y
+          para que un invitado pueda leer y subir en el álbum de otra persona sin un servidor
+          intermedio. La aplicación solo lee y escribe dentro de la carpeta
+          <code>MiAlbumWeb_Config</code>, pero el permiso de Google es amplio.
+        </p>
+        <p>
+          La lista de álbumes en los que participas se guarda en este navegador
+          (<code>localStorage</code>), sin tokens de acceso. Puedes borrarla con «Salir del álbum» o
+          limpiando los datos del sitio.
+        </p>
+        <p>
+          Al no estar verificada por Google, la app muestra el aviso de «aplicación no verificada» y
+          tiene un límite de usuarios. Puedes revocar el acceso en cualquier momento desde la
+          configuración de seguridad de tu cuenta de Google.
         </p>
 
         <h2>Acceso a tus datos</h2>

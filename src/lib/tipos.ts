@@ -49,12 +49,36 @@ export interface MemoEstructura {
   inv: string;
   users: string;
   fotos: string;
+  /** id de album.json (vacío en enlaces anteriores a este archivo). */
+  album: string;
+}
+
+/** Contenido de album.json: nombre visible del álbum. */
+export interface AlbumInfo {
+  nombre: string;
+  dueno?: string;
+  creado?: string;
+}
+
+/** Álbum recordado en este navegador (localStorage). Nunca guarda el token. */
+export interface AlbumGuardado {
+  drive: string;
+  inv: string;
+  users: string;
+  fotos: string;
+  album?: string;
+  nombre: string;
+  rol: Rol;
+  /** Fecha ISO en la que se unió a este álbum. */
+  unido: string;
 }
 
 export type OrdenGaleria = "recientes" | "antiguos" | "nombre";
 
 export interface ErrorHttp extends Error {
   code?: number;
+  /** Motivo concreto devuelto por Google (p. ej. appNotAuthorizedToFile). */
+  reason?: string;
 }
 
 export interface PerfilGoogle {
@@ -64,5 +88,4 @@ export interface PerfilGoogle {
 }
 
 export type ResultadoValidacion =
-  | { ok: true; invitacion: Invitacion }
-  | { ok: false; motivo: "invalida" | "expirada" };
+  { ok: true; invitacion: Invitacion } | { ok: false; motivo: "invalida" | "expirada" };

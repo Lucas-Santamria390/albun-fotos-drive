@@ -1,12 +1,16 @@
 import { AUTH } from "../auth";
-import { CONFIG } from "../config";
+import { CONFIG, origenSitio, scopeDelModo } from "../config";
 import { DriveApi } from "../drive/api";
 import { asegurarEstructura, compartirAlbum } from "../drive/structure";
 import { filtrarOrdenar } from "../services/galeria";
 import { generarToken, permisosSegunRol, validarInvitacion } from "../services/invitaciones";
 import { enlaceInvitacion } from "../services/enlaces";
+import { destinoEnlace, nombreAlbum } from "../services/albumes";
+import { mensajeAccesoAlbum } from "../services/errores";
 import { PERMISOS_ADMIN, puedeBorrar, puedeSubir } from "../services/permisos";
+import { albumes } from "./albumes.svelte";
 import type {
+  AlbumInfo,
   ErrorHttp,
   Foto,
   Invitacion,
@@ -54,6 +58,8 @@ class EstadoAlbum {
   usuarios = $state<Usuarios>({});
   invitaciones = $state<Invitaciones>({});
   fId = $state("");
+  /** Contenido de album.json (nombre visible). */
+  info = $state<AlbumInfo | null>(null);
 
   fotos = $state<Foto[]>([]);
   busqueda = $state("");
@@ -68,6 +74,8 @@ class EstadoAlbum {
   /** Enlace de la última invitación generada (solo ajustes). */
   enlaceActual = $state("");
   invitacionGenerada = $state("");
+  /** Error al habilitar el acceso público para invitados. */
+  avisoCompartir = $state("");
 
   /** id de la foto abierta en el visor. */
   fotoAbierta = $state<string | null>(null);
@@ -82,6 +90,7 @@ class EstadoAlbum {
   puedeBorrar = $derived(puedeBorrar(this.permisos));
   seleccionadas = $derived(this.seleccion.length);
   esOwner = $derived(this.modo === "owner");
+  nombre = $derived(nombreAlbum(this.info, this.esOwner ? "Mi álbum" : "Álbum compartido"));
 
   fotoActual = $derived(this.fotos.find((f) => f.id === this.fotoAbierta) ?? null);
 
@@ -90,14 +99,25 @@ class EstadoAlbum {
   /** Arranque: decide si hace falta login y precarga la sesión. */
   async iniciar(): Promise<void> {
     AUTH.init();
+    albumes.cargar();
     const params = new URLSearchParams(window.location.search);
-    this.modo = params.get("token") ? "inv" : "owner";
+    // Con `drive` en la URL se abre un álbum ajeno; sin él, el propio.
+    this.modo = params.get("drive") ? "inv" : "owner";
     this.fId = params.get("fotos") ?? "";
 
     if (!AUTH.token) {
       this.fase = "auth";
       return;
     }
+
+    // Un token de una versión anterior (drive.file) no coincide con el scope
+    // actual: se pide login de nuevo en vez de provocar un 404 de Drive.
+    if (AUTH.scope !== scopeDelModo(this.modo)) {
+      AUTH.salir();
+      this.fase = "auth";
+      return;
+    }
+
     await this.cargar();
   }
 
@@ -105,12 +125,20 @@ class EstadoAlbum {
     this.fase = "cargando";
     this.mensaje = "";
     try {
-      await AUTH.login();
+      await AUTH.login(scopeDelModo(this.modo));
       await this.cargar();
     } catch (e) {
       this.fase = "auth";
       this.mensaje = mensajeDe(e);
     }
+  }
+
+  /** Fuerza un login nuevo (scope distinto o permiso revocado). */
+  async entrarDeNuevo(): Promise<void> {
+    AUTH.salir();
+    const params = new URLSearchParams(window.location.search);
+    this.modo = params.get("drive") ? "inv" : "owner";
+    await this.entrar();
   }
 
   async cargar(): Promise<void> {
@@ -143,17 +171,24 @@ class EstadoAlbum {
   }
 
   private async prepararOwner(): Promise<void> {
-    await asegurarEstructura();
+    await asegurarEstructura(this.yo ?? undefined);
     this.fId = CONFIG.memo.fotos;
+    this.info = await this.#cargarInfo(CONFIG.memo.album);
 
     const [usuarios, invitaciones] = await Promise.all([
       this.cargarJson<Usuarios>(CONFIG.memo.users),
       this.cargarJson<Invitaciones>(CONFIG.memo.inv),
-      compartirAlbum().catch(() => undefined),
     ]);
 
     this.usuarios = usuarios;
     this.invitaciones = invitaciones;
+
+    try {
+      await compartirAlbum();
+      this.avisoCompartir = "";
+    } catch (e) {
+      this.avisoCompartir = mensajeDe(e);
+    }
 
     const email = this.yo ?? "";
     const actual = this.usuarios[email];
@@ -174,29 +209,53 @@ class EstadoAlbum {
   private async prepararInvitado(): Promise<boolean> {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
+    const raizId = params.get("drive");
     const invId = params.get("inv");
     const usersId = params.get("users");
     const fotosId = params.get("fotos");
+    const albumId = params.get("album") ?? "";
 
-    if (!invId || !usersId || !fotosId) {
+    if (!raizId || !invId || !usersId || !fotosId) {
       throw new Error("Este enlace de invitación está incompleto. Pide uno nuevo al administrador.");
     }
 
+    // El invitado también necesita el memo: registrarNombre() escribe en
+    // usuarios.json usando CONFIG.memo.users.
+    CONFIG.memo = { raiz: raizId, inv: invId, users: usersId, fotos: fotosId, album: albumId };
     this.fId = fotosId;
+    this.info = await this.#cargarInfo(albumId);
 
-    let invitaciones: Invitaciones;
     let usuarios: Usuarios;
     try {
-      [invitaciones, usuarios] = await Promise.all([
-        this.cargarJson<Invitaciones>(invId),
-        this.cargarJson<Usuarios>(usersId),
-      ]);
+      usuarios = await this.cargarJson<Usuarios>(usersId);
     } catch (e) {
-      const err = e as ErrorHttp;
-      if (err.code === 404 || err.code === 403) {
-        throw new Error("La invitación no es válida o ya fue revocada.");
-      }
-      throw e;
+      throw new Error(mensajeAccesoAlbum(e as ErrorHttp));
+    }
+
+    this.usuarios = usuarios;
+
+    // Ya registrado: basta con estar en usuarios.json (el enlace sin token del
+    // hub funciona así). El token solo hace falta para la primera entrada.
+    const email = this.yo ?? "";
+    const existente = this.usuarios[email];
+    if (existente) {
+      this.rol = existente.rol;
+      this.permisos = existente.permisos;
+      this.#registrarEnLista();
+      return false;
+    }
+
+    if (!token) {
+      throw new Error(
+        "Ya no formas parte de este álbum. Pide un enlace de invitación nuevo al administrador."
+      );
+    }
+
+    let invitaciones: Invitaciones;
+    try {
+      invitaciones = await this.cargarJson<Invitaciones>(invId);
+    } catch (e) {
+      throw new Error(mensajeAccesoAlbum(e as ErrorHttp));
     }
 
     const validacion = validarInvitacion(invitaciones, token);
@@ -204,21 +263,11 @@ class EstadoAlbum {
       throw new Error(
         validacion.motivo === "expirada"
           ? "Esta invitación ha caducado. Pide una nueva al administrador."
-          : "Invitación no válida o ya revocada.",
+          : "Invitación no válida o ya revocada."
       );
     }
 
     this.invitaciones = invitaciones;
-    this.usuarios = usuarios;
-
-    const email = this.yo ?? "";
-    const existente = this.usuarios[email];
-    if (existente) {
-      this.rol = existente.rol;
-      this.permisos = existente.permisos;
-      return false;
-    }
-
     this.rol = validacion.invitacion.rol;
     this.permisos = permisosSegunRol(validacion.invitacion);
     return true;
@@ -237,8 +286,92 @@ class EstadoAlbum {
     this.yoNombre = limpio;
 
     await this.guardarUsuarios();
+    this.#registrarEnLista();
     await this.recargarFotos();
     this.fase = "listo";
+  }
+
+  /** Lee album.json sin bloquear la apertura del álbum si no se puede. */
+  async #cargarInfo(id: string): Promise<AlbumInfo | null> {
+    if (!id) return null;
+    try {
+      const info = await this.cargarJson<AlbumInfo>(id);
+      return info?.nombre ? info : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Guarda el álbum actual en la lista de este navegador (solo invitados). */
+  #registrarEnLista(): void {
+    if (this.modo !== "inv" || !this.yo || !CONFIG.memo.raiz) return;
+    // El admin que abre su propio álbum con un enlace no lo añade a "compartidos".
+    if (this.rol === "admin") return;
+
+    albumes.agregar({
+      drive: CONFIG.memo.raiz,
+      inv: CONFIG.memo.inv,
+      users: CONFIG.memo.users,
+      fotos: CONFIG.memo.fotos,
+      album: CONFIG.memo.album || undefined,
+      nombre: nombreAlbum(this.info),
+      rol: this.rol ?? "colaborador",
+      unido: new Date().toISOString(),
+    });
+  }
+
+  /** Abre un álbum a partir de un enlace pegado (conserva el token si lo trae). */
+  entrarPorEnlace(crudo: string): void {
+    const destino = destinoEnlace(crudo, origenSitio());
+    if (!destino) {
+      throw new Error(
+        "Ese enlace no es una invitación válida. Copia el enlace completo que te compartieron."
+      );
+    }
+    window.location.href = destino;
+  }
+
+  /**
+   * Salir de un álbum al que te invitaron: se elimina la entrada propia de
+   * usuarios.json y la fila de la lista local. No cierra la sesión.
+   */
+  async salirDelAlbum(): Promise<void> {
+    if (this.modo !== "inv" || !this.yo) {
+      throw new Error("Solo puedes salir de un álbum al que te invitaron.");
+    }
+    if (this.rol === "admin") {
+      throw new Error("El administrador no puede salir de su propio álbum.");
+    }
+
+    const email = this.yo;
+
+    await albumes.salirDe(
+      { drive: CONFIG.memo.raiz, users: CONFIG.memo.users },
+      email
+    );
+
+    delete this.usuarios[email];
+    this.limpiarCache();
+    window.location.href = "/albumes.html";
+  }
+
+  /** Cambia el nombre visible del álbum (solo el dueño). */
+  async renombrarAlbum(nombre: string): Promise<void> {
+    if (!this.esOwner) {
+      throw new Error("Solo el administrador puede cambiar el nombre del álbum.");
+    }
+    const limpio = nombre.trim();
+    if (!limpio) throw new Error("El nombre del álbum no puede estar vacío.");
+    if (!CONFIG.memo.album) throw new Error("No se encontró album.json del álbum.");
+
+    const info: AlbumInfo = {
+      nombre: limpio.slice(0, 60),
+      creado: this.info?.creado ?? new Date().toISOString(),
+    };
+    if (this.yo) info.dueno = this.yo;
+
+    await DriveApi.actualizarJson(CONFIG.memo.album, info);
+    this.info = info;
   }
 
   salir(): void {
@@ -261,7 +394,16 @@ class EstadoAlbum {
     this.invitaciones[token] = invitacion;
     await this.guardarInvitaciones();
 
-    const enlace = enlaceInvitacion(token, CONFIG.memo);
+    // El acceso del invitado depende de los permisos públicos de Drive: si
+    // fallan, se avisa en ajustes en lugar de entregar un enlace roto.
+    try {
+      await compartirAlbum();
+      this.avisoCompartir = "";
+    } catch (e) {
+      this.avisoCompartir = mensajeDe(e);
+    }
+
+    const enlace = enlaceInvitacion(token, CONFIG.memo, origenSitio());
     this.invitacionGenerada = token;
     this.enlaceActual = enlace;
     return enlace;
@@ -279,7 +421,7 @@ class EstadoAlbum {
   /** Reconstruye el enlace de una invitación existente (para volver a mostrar el QR). */
   mostrarEnlace(token: string): void {
     this.invitacionGenerada = token;
-    this.enlaceActual = enlaceInvitacion(token, CONFIG.memo);
+    this.enlaceActual = enlaceInvitacion(token, CONFIG.memo, origenSitio());
   }
 
   async crearDesdeAjustes(usuario: string, datos: Usuario): Promise<void> {
@@ -293,10 +435,16 @@ class EstadoAlbum {
   }
 
   guardarUsuarios(): Promise<unknown> {
+    if (!CONFIG.memo.users) {
+      return Promise.reject(new Error("No se pudo identificar usuarios.json del álbum."));
+    }
     return DriveApi.actualizarJson(CONFIG.memo.users, $state.snapshot(this.usuarios));
   }
 
   guardarInvitaciones(): Promise<unknown> {
+    if (!CONFIG.memo.inv) {
+      return Promise.reject(new Error("No se pudo identificar invitaciones.json del álbum."));
+    }
     return DriveApi.actualizarJson(CONFIG.memo.inv, $state.snapshot(this.invitaciones));
   }
 
@@ -313,10 +461,7 @@ class EstadoAlbum {
   // ------------------------------------------------------------------ fotos
 
   async recargarFotos(): Promise<void> {
-    const archivos = await DriveApi.listarTodas(
-      "'" + this.fId + "' in parents and trashed=false",
-      CAMPOS,
-    );
+    const archivos = await DriveApi.listarTodas("'" + this.fId + "' in parents and trashed=false", CAMPOS);
     this.fotos = archivos.map((a) => ({
       id: a.id,
       name: a.name ?? "",
@@ -389,7 +534,7 @@ class EstadoAlbum {
           archivo.name,
           (pct) => {
             item.pct = pct;
-          },
+          }
         );
 
         this.fotos.unshift({

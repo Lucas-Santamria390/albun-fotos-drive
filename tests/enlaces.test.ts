@@ -7,16 +7,23 @@ const memo: MemoEstructura = {
   inv: "fInv",
   users: "fUsers",
   fotos: "fFotos",
+  album: "fAlbum",
 };
 
 describe("enlaceInvitacion", () => {
-  it("construye el enlace con la URL base del sitio", () => {
-    const enlace = enlaceInvitacion("tok123", memo);
-    expect(enlace.indexOf("https://mialbumweb.netlify.app/album.html?")).toBe(0);
+  it("usa el origen recibido, no un dominio fijo", () => {
+    const enlace = enlaceInvitacion("tok123", memo, "http://localhost:4321");
+    expect(enlace.startsWith("http://localhost:4321/album.html?")).toBe(true);
+    expect(enlace).not.toContain("mialbumweb.netlify.app");
+  });
+
+  it("funciona con el origen de un deploy preview", () => {
+    const enlace = enlaceInvitacion("tok123", memo, "https://rama--mialbumweb.netlify.app");
+    expect(enlace.startsWith("https://rama--mialbumweb.netlify.app/album.html?")).toBe(true);
   });
 
   it("incluye raíz, token e ids de archivos", () => {
-    const enlace = enlaceInvitacion("tok123", memo);
+    const enlace = enlaceInvitacion("tok123", memo, "https://album.example");
     expect(enlace).toContain("drive=fRaiz");
     expect(enlace).toContain("token=tok123");
     expect(enlace).toContain("inv=fInv");
@@ -25,19 +32,47 @@ describe("enlaceInvitacion", () => {
   });
 
   it("usa el memo pasado y no uno global", () => {
-    const enlace = enlaceInvitacion("x", {
-      raiz: "a",
-      inv: "b",
-      users: "c",
-      fotos: "d",
-    });
+    const enlace = enlaceInvitacion(
+      "x",
+      { raiz: "a", inv: "b", users: "c", fotos: "d", album: "" },
+      "https://album.example"
+    );
     expect(enlace).toContain("drive=a");
-    expect(enlace).not.toContain("drive=fRaiz");
+    expect(enlace).toContain("inv=b");
+    expect(enlace).toContain("users=c");
+    expect(enlace).toContain("fotos=d");
   });
 
-  it("codifica el token si llega sin codificar", () => {
-    const enlace = enlaceInvitacion("t o k/1", memo);
-    expect(enlace).toContain("token=" + encodeURIComponent("t o k/1"));
-    expect(enlace).not.toContain("token=t o k/1");
+  it("incluye el id de album.json cuando existe", () => {
+    const enlace = enlaceInvitacion("tok", memo, "https://album.example");
+    expect(enlace).toContain("album=fAlbum");
+  });
+
+  it("omite album cuando el memo no lo tiene (enlaces antiguos)", () => {
+    const enlace = enlaceInvitacion(
+      "tok",
+      { raiz: "a", inv: "b", users: "c", fotos: "d", album: "" },
+      "https://album.example"
+    );
+    expect(enlace).not.toContain("album=");
+  });
+
+  it("codifica el token exactamente una vez", () => {
+    const token = "t o k/1&x=2";
+    const enlace = enlaceInvitacion(token, memo, "https://album.example");
+    const url = new URL(enlace);
+    expect(url.searchParams.get("token")).toBe(token);
+    expect(enlace).toContain("token=t+o+k%2F1%26x%3D2");
+    expect(enlace).not.toContain("%252F");
+  });
+
+  it("normaliza la barra final del origen", () => {
+    const enlace = enlaceInvitacion("tok", memo, "https://album.example/");
+    expect(enlace.startsWith("https://album.example/album.html?")).toBe(true);
+  });
+
+  it("rechaza un origen inválido en lugar de inventarlo", () => {
+    expect(() => enlaceInvitacion("tok", memo, "ttp://localhost:4321")).toThrow();
+    expect(() => enlaceInvitacion("tok", memo, "")).toThrow();
   });
 });

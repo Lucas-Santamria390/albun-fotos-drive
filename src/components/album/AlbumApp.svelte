@@ -1,9 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { album } from "../../lib/stores/album.svelte";
+  import { albumes } from "../../lib/stores/albumes.svelte";
+  import { CONFIG } from "../../lib/config";
   import { toastError, toastOk } from "../../lib/stores/toast.svelte";
   import { inicial } from "../../lib/services/texto";
   import InterruptorTema from "../ui/InterruptorTema.svelte";
+  import Modal from "../ui/Modal.svelte";
   import Galeria from "./Galeria.svelte";
   import ZonaSubida from "./ZonaSubida.svelte";
   import BarraSeleccion from "./BarraSeleccion.svelte";
@@ -13,6 +16,8 @@
 
   let cargando = $state(false);
   let idsPendientes = $state<string[]>([]);
+  let porSalirAlbum = $state(false);
+  let saliendoDelAlbum = $state(false);
 
   onMount(() => {
     void album.iniciar();
@@ -58,6 +63,25 @@
     await album.registrarNombre(nombre);
     toastOk("¡Ya estás dentro!");
   }
+
+  async function confirmarSalirDelAlbum(): Promise<void> {
+    saliendoDelAlbum = true;
+    try {
+      // Si sale bien, el store redirige a "Mis álbumes".
+      await album.salirDelAlbum();
+    } catch (e) {
+      toastError(e instanceof Error ? e.message : "No se pudo salir del álbum.");
+      saliendoDelAlbum = false;
+      porSalirAlbum = false;
+    }
+  }
+
+  function quitarDeMiLista(): void {
+    if (album.modo !== "inv" || !CONFIG.memo.raiz) return;
+    albumes.quitar(CONFIG.memo.raiz);
+    toastOk("Álbum quitado de tu lista.");
+    window.location.href = "/albumes.html";
+  }
 </script>
 
 <div class="flex min-h-dvh flex-col">
@@ -95,18 +119,27 @@
             </p>
 
             <div class="mt-5 flex flex-col gap-2">
-              <button type="button" class="btn btn-prim" onclick={() => album.entrar()}>
+              <button
+                type="button"
+                class="btn btn-prim"
+                onclick={() => (album.fase === "error" ? album.entrarDeNuevo() : album.entrar())}
+              >
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <circle cx="12" cy="12" r="10"></circle>
                   <path d="M15.5 8.5a4 4 0 1 0 0 7" stroke-linecap="round"></path>
                 </svg>
-                Iniciar sesión con Google
+                {album.fase === "error" ? "Iniciar sesión de nuevo" : "Iniciar sesión con Google"}
               </button>
 
               {#if album.fase === "error"}
                 <button type="button" class="btn btn-sec" onclick={() => album.cargar()}>
                   Reintentar
                 </button>
+                {#if album.modo === "inv"}
+                  <button type="button" class="btn btn-ghost" onclick={quitarDeMiLista}>
+                    Quitar de mi lista
+                  </button>
+                {/if}
               {/if}
 
               <a href="/" class="btn btn-ghost">Volver al inicio</a>
@@ -145,6 +178,11 @@
           </span>
           <span class="hidden text-lg font-extrabold tracking-tight sm:inline">MiAlbumWeb</span>
         </a>
+
+        <span
+          class="hidden max-w-[14rem] truncate text-sm font-semibold text-suave lg:inline"
+          title={album.nombre}>{album.nombre}</span
+        >
 
         <div class="ml-auto flex items-center gap-1.5 sm:gap-2">
           <div class="chip hidden max-w-[16rem] sm:inline-flex" title={album.yo ?? ""}>
@@ -192,6 +230,31 @@
             </a>
           {/if}
 
+          <a href="/albumes.html" class="btn btn-ghost btn-sm" title="Mis álbumes">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+              <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+            </svg>
+            <span class="hidden md:inline">Mis álbumes</span>
+          </a>
+
+          {#if !album.esOwner && album.rol !== "admin"}
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm text-peligro"
+              title="Salir del álbum"
+              aria-label="Salir del álbum"
+              onclick={() => (porSalirAlbum = true)}
+            >
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              <span class="hidden md:inline">Salir del álbum</span>
+            </button>
+          {/if}
+
           <button type="button" class="btn btn-sec btn-sm" onclick={() => album.salir()}>
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path
@@ -199,7 +262,7 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"></path>
             </svg>
-            <span class="hidden sm:inline">Salir</span>
+            <span class="hidden sm:inline">Cerrar sesión</span>
           </button>
         </div>
       </div>
@@ -217,5 +280,36 @@
       onConfirmar={confirmarBorrado}
     />
     <Lightbox />
+
+    <Modal
+      abierto={porSalirAlbum}
+      titulo="Salir del álbum"
+      descripcion="Vas a dejar de tener acceso a este álbum. Para volver necesitarás un enlace de invitación."
+      cerrable={!saliendoDelAlbum}
+      onCerrar={() => (porSalirAlbum = false)}
+    >
+      {#snippet children()}
+        <p class="text-sm font-semibold">{album.nombre}</p>
+      {/snippet}
+
+      {#snippet acciones()}
+        <button
+          type="button"
+          class="btn btn-sec"
+          disabled={saliendoDelAlbum}
+          onclick={() => (porSalirAlbum = false)}
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-peligro"
+          disabled={saliendoDelAlbum}
+          onclick={confirmarSalirDelAlbum}
+        >
+          {saliendoDelAlbum ? "Saliendo…" : "Salir del álbum"}
+        </button>
+      {/snippet}
+    </Modal>
   {/if}
 </div>
